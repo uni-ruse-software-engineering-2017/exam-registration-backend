@@ -1,5 +1,7 @@
 package uniruse.mse.examregistration.user;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import java.nio.charset.Charset;
@@ -10,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,6 +36,12 @@ public class UserModuleTest {
 	private MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
 			MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
 
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private BCryptPasswordEncoder encoder;
+
 	@Test
 	public void should_CreateUserAccount() throws Exception {
 		String userJson = "{ \"username\" : \"user1\", \"password\": \"123\"," +
@@ -42,6 +51,11 @@ public class UserModuleTest {
 				.contentType(contentType)
 				.content(userJson))
 				.andExpect(MockMvcResultMatchers.status().isCreated());
+
+		User user = userRepository.findById(1L).get();
+
+		assertEquals("user1", user.getUsername());
+		assertTrue("verify password encrypted", encoder.matches("123", user.getPassword()));
 	}
 
 	@Before
