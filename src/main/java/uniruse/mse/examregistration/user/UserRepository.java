@@ -7,11 +7,10 @@ import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-class UserRepository extends SimpleJpaRepository<User, Long> {
-	
+class UserRepository extends SimpleJpaRepository<ApplicationUser, Long> {
+
 	@Autowired
 	public UserRepository(EntityManager em) {
-		super(User.class, em);
+		super(ApplicationUser.class, em);
 	}
-
 }

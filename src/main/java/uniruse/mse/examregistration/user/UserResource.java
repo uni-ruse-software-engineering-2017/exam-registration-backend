@@ -16,7 +16,7 @@ public class UserResource {
 	private UserService userService;
 
 	@RequestMapping(method = POST)
-	public ResponseEntity<?> create(@RequestBody User user) {
+	public ResponseEntity<?> create(@RequestBody ApplicationUser user) {
 		userService.create(user);
 
 		return new ResponseEntity<>(HttpStatus.CREATED);

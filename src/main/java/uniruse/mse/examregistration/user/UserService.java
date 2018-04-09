@@ -19,11 +19,11 @@ public class UserService {
 	@Autowired
 	private BCryptPasswordEncoder encoder;
 
-	public void create(User user) {
-		User example = new User();
+	public void create(ApplicationUser user) {
+		ApplicationUser example = new ApplicationUser();
 		example.setUsername(user.getUsername());
 
-		Optional<User> existingUser = userRepository.findOne(Example.of(example));
+		Optional<ApplicationUser> existingUser = userRepository.findOne(Example.of(example));
 
 		if (existingUser.isPresent()) {
 			throw new ObjectAlreadyExistsException("User with username '" + user.getUsername() + "' already exists");
@@ -32,6 +32,12 @@ public class UserService {
 		user.setPassword(encoder.encode(user.getPassword()));
 
 		userRepository.save(user);
+	}
+
+	public Optional<ApplicationUser> getByUsername(String username) {
+		ApplicationUser example = new ApplicationUser();
+		example.setUsername(username);
+		return userRepository.findOne(Example.of(example));
 	}
 
 	@Bean
