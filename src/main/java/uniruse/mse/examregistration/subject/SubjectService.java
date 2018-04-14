@@ -11,13 +11,17 @@ import org.springframework.stereotype.Service;
 
 import uniruse.mse.examregistration.ObjectAlreadyExistsException;
 import uniruse.mse.examregistration.user.ApplicationUser;
+import uniruse.mse.examregistration.user.UserService;
 
 @Service
 public class SubjectService {
-	
+
 	@Autowired
 	private SubjectRepository subjectRepository;
-	
+
+	@Autowired
+	private UserService userService;
+
 	public void create(Subject subject) {
 		Subject example = new Subject();
 		example.setName(subject.getName());
@@ -27,12 +31,29 @@ public class SubjectService {
 		if (existingSubject.isPresent()) {
 			throw new ObjectAlreadyExistsException("Subject with username '" + subject.getName() + "' already exists");
 		}
-		
+
 		subjectRepository.save(subject);
 	}
-	
+
 	public List<Subject> getSubjects() {
 		return subjectRepository.findAll(new Sort(Direction.ASC, "name"));
+	}
+
+	public void assign(Long subjectId, String[] professors) {
+		Optional<Subject> subjectOptional = subjectRepository.findById(subjectId);
+
+		if (subjectOptional.isPresent()) {
+			Subject subject = subjectOptional.get();
+
+			for (String username : professors) {
+				Optional<ApplicationUser> professor = userService.getByUsername(username);
+				subject.getProfessors().add(professor.get());
+			}
+
+			subjectRepository.save(subject);
+		} else {
+			// TODO throw exception
+		}
 	}
 
 }

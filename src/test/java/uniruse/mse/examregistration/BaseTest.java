@@ -48,10 +48,6 @@ public abstract class BaseTest {
 	@Before
 	@Transactional
 	public void setup() {
-//		String truncateTablesQuery = fromFile("../truncate_table.sql");
-
-//		em.createNativeQuery(truncateTablesQuery).executeUpdate();
-
 		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 	}
 }
