@@ -6,3 +6,6 @@ addons:
       - oracle-java8-installer
 
 language: java
+
+notifications:
+  slack: uni-ruse-masters:b0uEelST36eN8mkTXREAHeY0
