@@ -28,9 +28,11 @@ import uniruse.mse.examregistration.user.UserRole;
 import uniruse.mse.examregistration.user.UserService;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = { ExamRegistrationBackendApplication.class, H2Config.class })
+@SpringBootTest(
+		classes = { ExamRegistrationBackendApplication.class, H2Config.class })
 @WebAppConfiguration
-@Sql(executionPhase = ExecutionPhase.AFTER_TEST_METHOD, scripts = "classpath:/uniruse/mse/examregistration/truncate_tables.sql")
+@Sql(executionPhase = ExecutionPhase.AFTER_TEST_METHOD,
+		scripts = "classpath:/uniruse/mse/examregistration/truncate_tables.sql")
 public abstract class BaseTest {
 
 	protected MockMvc mockMvc;
@@ -44,7 +46,8 @@ public abstract class BaseTest {
 	@Autowired
 	private UserService userService;
 
-	protected MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
+	protected MediaType contentType = new MediaType(
+			MediaType.APPLICATION_JSON.getType(),
 			MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
 
 	protected String fromFile(String path) {
@@ -58,7 +61,8 @@ public abstract class BaseTest {
 	@Before
 	@Transactional
 	public void setup() {
-		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+			.build();
 	}
 
 	protected String toJson(Object object) {

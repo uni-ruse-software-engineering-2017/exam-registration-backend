@@ -24,13 +24,17 @@ public class UserModuleTest extends BaseTest {
 		String userJson = "{ \"username\" : \"user1\", \"password\": \"123\","
 				+ "\"fullName\": \"User 1\", \"role\": \"STUDENT\"  }";
 
-		mockMvc.perform(post("/users").contentType(contentType).content(userJson))
-				.andExpect(MockMvcResultMatchers.status().isCreated());
+		mockMvc.perform(post("/users").contentType(contentType)
+			.content(userJson))
+			.andExpect(MockMvcResultMatchers.status()
+				.isCreated());
 
-		ApplicationUser user = userRepository.findById(1L).get();
+		ApplicationUser user = userRepository.findById(1L)
+			.get();
 
 		assertEquals("user1", user.getUsername());
-		assertTrue("verify password encrypted", encoder.matches("123", user.getPassword()));
+		assertTrue("verify password encrypted",
+				encoder.matches("123", user.getPassword()));
 	}
 
 	@Test
@@ -38,9 +42,12 @@ public class UserModuleTest extends BaseTest {
 		String userJson = "{ \"username\" : \"user1\", \"password\": \"123\","
 				+ "\"fullName\": \"User 1\", \"role\": \"STUDENT\"  }";
 
-		mockMvc.perform(post("/users").contentType(contentType).content(userJson));
-		mockMvc.perform(post("/users").contentType(contentType).content(userJson))
-				.andExpect(MockMvcResultMatchers.status().isConflict());
+		mockMvc.perform(post("/users").contentType(contentType)
+			.content(userJson));
+		mockMvc.perform(post("/users").contentType(contentType)
+			.content(userJson))
+			.andExpect(MockMvcResultMatchers.status()
+				.isConflict());
 	}
 
 }

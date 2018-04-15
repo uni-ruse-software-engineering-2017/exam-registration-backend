@@ -10,7 +10,7 @@ CREATE TABLE exam
    created_on timestamp not null,
    modified_on timestamp not null,
 
-   CONSTRAINT exam_pk PRIMARY KEY (id),
+   CONSTRAINT exam_pk PRIMARY KEY (id)
 );
 
 create table exam_participation_request
@@ -20,5 +20,5 @@ create table exam_participation_request
    student_id bigint REFERENCES application_user (id),
    status character varying(20) not null,
    
-   CONSTRAINT exam_participation_request_pk PRIMARY KEY (id),
+   CONSTRAINT exam_participation_request_pk PRIMARY KEY (id)
 );

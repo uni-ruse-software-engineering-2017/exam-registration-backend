@@ -10,13 +10,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/users")
 public class UserResource {
 
 	@Autowired
 	private UserService userService;
 
-	@RequestMapping(method = POST)
+	/**
+	 * POST /users
+	 *
+	 * Private end point for creating new users.
+	 *
+	 * Required role: ADMIN
+	 *
+	 * @param user
+	 * @return 201 (Created)
+	 */
+	@RequestMapping(method = POST, path = "/users")
 	public ResponseEntity<?> create(@RequestBody ApplicationUser user) {
 		userService.create(user);
 
