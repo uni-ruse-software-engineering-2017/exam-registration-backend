@@ -23,6 +23,10 @@ import org.springframework.web.context.WebApplicationContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import uniruse.mse.examregistration.user.ApplicationUser;
+import uniruse.mse.examregistration.user.UserRole;
+import uniruse.mse.examregistration.user.UserService;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { ExamRegistrationBackendApplication.class, H2Config.class })
 @WebAppConfiguration
@@ -36,6 +40,9 @@ public abstract class BaseTest {
 
 	@Autowired
 	protected EntityManager em;
+
+	@Autowired
+	private UserService userService;
 
 	protected MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
 			MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
@@ -60,5 +67,17 @@ public abstract class BaseTest {
 		} catch (JsonProcessingException e) {
 			throw new IllegalArgumentException(e);
 		}
+	}
+
+	protected ApplicationUser createUser(String name, UserRole role) {
+		ApplicationUser user = new ApplicationUser();
+		user.setUsername(name);
+		user.setPassword("123456");
+		user.setFullName("Test 123");
+		user.setRole(role);
+
+		userService.create(user);
+
+		return user;
 	}
 }
