@@ -3,6 +3,7 @@ package uniruse.mse.examregistration.subject;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import uniruse.mse.examregistration.BaseTest;
+import uniruse.mse.examregistration.subject.SubjectResource.SubjectAssignmentRequest;
 import uniruse.mse.examregistration.user.ApplicationUser;
 import uniruse.mse.examregistration.user.UserRole;
 import uniruse.mse.examregistration.user.UserService;
@@ -68,7 +70,10 @@ public class SubjectTests extends BaseTest {
 		String subjectJson = fromFile("subject.json");
 		mockMvc.perform(post("/subjects").contentType(contentType).content(subjectJson));
 
-		mockMvc.perform(post("/subjects/1").contentType(contentType).content("[\"grigorova\", \"hristova\"]"));
+		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		request.setAdded(new String[] { "grigorova", "hristova" });
+
+		mockMvc.perform(patch("/subjects/1/assignees").contentType(contentType).content(toJson(request)));
 
 		Subject subject = subjectRepository.findById(1L).get();
 
@@ -76,18 +81,64 @@ public class SubjectTests extends BaseTest {
 	}
 
 	@Test
-	public void should_NotAssignProfessorWhenSubjectDoesNotExist() {
+	public void should_NotAssignProfessorWhenSubjectDoesNotExist() throws Exception {
+		createUser("grigorova", UserRole.PROFESSOR);
 
+		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		request.setAdded(new String[] { "grigorova", "hristova" });
+
+		mockMvc.perform(patch("/subjects/1/assignees").contentType(contentType).content(toJson(request)))
+			.andExpect(MockMvcResultMatchers.status().isNotFound());
 	}
 
 	@Test
-	public void should_NotAllowAssigningNonProfessorToSubject() {
+	public void should_NotAllowAssigningNonProfessorToSubject() throws Exception {
+		createUser("grigorova", UserRole.STUDENT);
 
+		String subjectJson = fromFile("subject.json");
+		mockMvc.perform(post("/subjects").contentType(contentType).content(subjectJson));
+
+		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		request.setAdded(new String[] { "grigorova" });
+
+		mockMvc.perform(patch("/subjects/1/assignees").contentType(contentType).content(toJson(request)))
+			.andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
 	}
 
 	@Test
-	public void should_UnAssignProfessorToSubject() {
+	@Transactional
+	public void should_UnassignProfessorToSubject() throws Exception {
+		createUser("grigorova", UserRole.PROFESSOR);
 
+		String subjectJson = fromFile("subject.json");
+		mockMvc.perform(post("/subjects").contentType(contentType).content(subjectJson));
+
+		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		request.setAdded(new String[] { "grigorova" });
+
+		mockMvc.perform(patch("/subjects/1/assignees").contentType(contentType).content(toJson(request)));
+
+		Subject subject = subjectRepository.findById(1L).get();
+		assertEquals(1, subject.getProfessors().size());
+
+		request = new SubjectAssignmentRequest();
+		request.setRemoved(new String[] { "grigorova" });
+
+		mockMvc.perform(patch("/subjects/1/assignees").contentType(contentType).content(toJson(request)));
+
+		subject = subjectRepository.findById(1L).get();
+		assertEquals(0, subject.getProfessors().size());
+	}
+
+	@Test
+	public void should_NotUnassignProfessorWhenSubjectDoesNotExist() throws Exception {
+		createUser("grigorova", UserRole.PROFESSOR);
+
+		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		request.setRemoved(new String[] { "grigorova" });
+
+		mockMvc.perform(post("/subjects/1").contentType(contentType).content(toJson(request)))
+			.andExpect(MockMvcResultMatchers.status().isNotFound());
 	}
 
 	private ApplicationUser createUser(String name, UserRole role) {

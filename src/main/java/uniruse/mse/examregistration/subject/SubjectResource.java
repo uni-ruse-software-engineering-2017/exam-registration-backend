@@ -1,6 +1,7 @@
 package uniruse.mse.examregistration.subject;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.util.List;
@@ -32,9 +33,31 @@ public class SubjectResource {
 		return subjectService.getSubjects();
 	}
 
-	@RequestMapping(method = POST, path = "/{id}")
-	public void assignProfessors(@PathVariable("id") Long subjectId, @RequestBody String[] professors) {
-		subjectService.assign(subjectId, professors);
+	@RequestMapping(method = PATCH, path = "/{id}/assignees")
+	public void assignProfessors(@PathVariable("id") Long subjectId, @RequestBody SubjectAssignmentRequest request) {
+		subjectService.updateAssignees(subjectId, request.getAdded(), request.getRemoved());
+	}
+
+	public static class SubjectAssignmentRequest {
+		private String[] added;
+
+		private String[] removed;
+
+		public String[] getAdded() {
+			return added;
+		}
+
+		public void setAdded(String[] added) {
+			this.added = added;
+		}
+
+		public String[] getRemoved() {
+			return removed;
+		}
+
+		public void setRemoved(String[] removed) {
+			this.removed = removed;
+		}
 	}
 
 }

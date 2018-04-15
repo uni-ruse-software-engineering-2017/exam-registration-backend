@@ -10,7 +10,10 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import uniruse.mse.examregistration.ObjectAlreadyExistsException;
+import uniruse.mse.examregistration.ObjectNotFoundException;
+import uniruse.mse.examregistration.OperationNotAllowedException;
 import uniruse.mse.examregistration.user.ApplicationUser;
+import uniruse.mse.examregistration.user.UserRole;
 import uniruse.mse.examregistration.user.UserService;
 
 @Service
@@ -39,21 +42,36 @@ public class SubjectService {
 		return subjectRepository.findAll(new Sort(Direction.ASC, "name"));
 	}
 
-	public void assign(Long subjectId, String[] professors) {
+	public void updateAssignees(Long subjectId, String[] added, String[] removed) {
 		Optional<Subject> subjectOptional = subjectRepository.findById(subjectId);
 
-		if (subjectOptional.isPresent()) {
-			Subject subject = subjectOptional.get();
-
-			for (String username : professors) {
-				Optional<ApplicationUser> professor = userService.getByUsername(username);
-				subject.getProfessors().add(professor.get());
-			}
-
-			subjectRepository.save(subject);
-		} else {
-			// TODO throw exception
+		if (!subjectOptional.isPresent()) {
+			throw new ObjectNotFoundException("Subject with id '" + subjectId + "' is not found");
 		}
+
+		Subject subject = subjectOptional.get();
+
+		if (added != null) {
+			for (String username : added) {
+				ApplicationUser professor = userService.getByUsername(username).get();
+
+				if (professor.getRole().equals(UserRole.PROFESSOR)) {
+					subject.getProfessors().add(professor);
+				} else {
+					throw new OperationNotAllowedException("The provided user '" + username + "' is not a professor");
+				}
+			}
+		}
+
+		if (removed != null) {
+			for (String username : removed) {
+				ApplicationUser professor = userService.getByUsername(username).get();
+
+				subject.getProfessors().remove(professor);
+			}
+		}
+
+		subjectRepository.save(subject);
 	}
 
 }

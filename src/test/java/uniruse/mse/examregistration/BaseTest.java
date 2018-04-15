@@ -20,6 +20,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { ExamRegistrationBackendApplication.class, H2Config.class })
 @WebAppConfiguration
@@ -49,5 +52,13 @@ public abstract class BaseTest {
 	@Transactional
 	public void setup() {
 		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+	}
+
+	protected String toJson(Object object) {
+		try {
+			return new ObjectMapper().writeValueAsString(object);
+		} catch (JsonProcessingException e) {
+			throw new IllegalArgumentException(e);
+		}
 	}
 }
