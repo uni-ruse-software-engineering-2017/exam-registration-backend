@@ -3,7 +3,7 @@ package uniruse.mse.examregistration.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import uniruse.mse.examregistration.user.ApplicationUser;
+import uniruse.mse.examregistration.user.model.ApplicationUser;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

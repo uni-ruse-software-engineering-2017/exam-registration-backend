@@ -17,15 +17,17 @@ import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import uniruse.mse.examregistration.user.ApplicationUser;
 import uniruse.mse.examregistration.user.UserRole;
 import uniruse.mse.examregistration.user.UserService;
+import uniruse.mse.examregistration.user.model.ApplicationUser;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
@@ -63,6 +65,45 @@ public abstract class BaseTest {
 	public void setup() {
 		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
 			.build();
+	}
+
+	/**
+	 * Helper method for dispatching HTTP POST requests with application/json
+	 * content and response type.
+	 *
+	 * @param url
+	 *            - end point URI
+	 * @param jsonBody
+	 *            - HTTP JSON body
+	 * @return HTTP application/json response
+	 * @throws Exception
+	 */
+	protected ResultActions post(String url, String jsonBody) throws Exception {
+
+		return this.mockMvc.perform(MockMvcRequestBuilders.post(url)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(jsonBody));
+	}
+
+	/**
+	 * Helper method for dispatching HTTP PATCH requests with application/json
+	 * content and response type.
+	 *
+	 * @param url
+	 *            - end point URI
+	 * @param jsonBody
+	 *            - HTTP JSON body
+	 * @return HTTP application/json response
+	 * @throws Exception
+	 */
+	protected ResultActions patch(String url, String jsonBody)
+			throws Exception {
+
+		return this.mockMvc.perform(MockMvcRequestBuilders.patch(url)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(jsonBody));
 	}
 
 	protected String toJson(Object object) {

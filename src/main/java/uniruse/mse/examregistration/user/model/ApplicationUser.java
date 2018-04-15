@@ -1,4 +1,4 @@
-package uniruse.mse.examregistration.user;
+package uniruse.mse.examregistration.user.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -8,6 +8,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import uniruse.mse.examregistration.user.UserRole;
 
 @Entity
 @Table(name = "application_user")

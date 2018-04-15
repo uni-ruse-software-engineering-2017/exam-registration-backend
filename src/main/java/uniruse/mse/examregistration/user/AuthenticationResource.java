@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import uniruse.mse.examregistration.user.model.SignUpUser;
+
 @RestController()
 public class AuthenticationResource {
 	@Autowired
@@ -23,7 +25,7 @@ public class AuthenticationResource {
 	 * @return 201 (Created)
 	 */
 	@RequestMapping(method = POST, path = "/sign-up")
-	public ResponseEntity<?> signUp(@RequestBody ApplicationUser user) {
+	public ResponseEntity<?> signUp(@RequestBody SignUpUser user) {
 		userService.create(user);
 
 		return new ResponseEntity<>(HttpStatus.CREATED);

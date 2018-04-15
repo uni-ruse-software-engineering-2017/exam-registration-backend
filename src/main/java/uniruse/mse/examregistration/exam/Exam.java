@@ -18,7 +18,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import uniruse.mse.examregistration.subject.Subject;
-import uniruse.mse.examregistration.user.ApplicationUser;
+import uniruse.mse.examregistration.user.model.ApplicationUser;
 
 @Entity
 @Table(name = "exam")

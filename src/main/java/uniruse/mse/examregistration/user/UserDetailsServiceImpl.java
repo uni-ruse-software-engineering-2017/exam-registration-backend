@@ -7,6 +7,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import uniruse.mse.examregistration.user.model.ApplicationUser;
+
 import static java.util.Collections.emptyList;
 
 import java.util.Optional;

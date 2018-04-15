@@ -13,7 +13,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
-import uniruse.mse.examregistration.user.ApplicationUser;
+import uniruse.mse.examregistration.user.model.ApplicationUser;
 
 @Entity
 @Table(name = "subject")

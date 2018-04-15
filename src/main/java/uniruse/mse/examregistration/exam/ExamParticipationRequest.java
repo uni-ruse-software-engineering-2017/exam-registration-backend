@@ -10,7 +10,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import uniruse.mse.examregistration.user.ApplicationUser;
+import uniruse.mse.examregistration.user.model.ApplicationUser;
 
 @Entity
 @Table(name = "exam_participation_request")
