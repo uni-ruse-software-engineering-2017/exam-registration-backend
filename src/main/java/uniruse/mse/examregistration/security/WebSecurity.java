@@ -20,26 +20,28 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Configuration
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
-	private UserDetailsService userDetailsService;
-	private BCryptPasswordEncoder bCryptPasswordEncoder;
+	private final UserDetailsService userDetailsService;
+	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
 	@Autowired
-	public WebSecurity(UserDetailsService userDetailsService,
-			BCryptPasswordEncoder bCryptPasswordEncoder) {
+	public WebSecurity(
+		UserDetailsService userDetailsService,
+		BCryptPasswordEncoder bCryptPasswordEncoder
+	) {
 		this.userDetailsService = userDetailsService;
 		this.bCryptPasswordEncoder = bCryptPasswordEncoder;
 	}
 
 	/**
 	 * Adds global security configuration for the application.
-	 * 
+	 *
 	 * 1. Enables CORS (TODO: configure CORS as well).
 	 * 2. Disables CSRF protection (it's not needed).
 	 * 3. Makes POST '/login' and '/sign-up' public endpoints (no auth).
 	 * 4. Makes all other endpoints require authentication.
 	 * 5. Adds JWT Authentication and Authorization filters.
 	 * 6. Turns off sessions (we should not keep any state).
-	 * 
+	 *
 	 * Currently authentication is disabled when running tests!
 	 */
 	@Override
@@ -54,8 +56,8 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 			.anyRequest()
 			.authenticated()
 			.and()
-			.addFilter(new JWTAuthenticationFilter(authenticationManager()))
-			.addFilter(new JWTAuthorizationFilter(authenticationManager()))
+			.addFilter(new JWTAuthenticationFilter(this.authenticationManager()))
+			.addFilter(new JWTAuthorizationFilter(this.authenticationManager()))
 			.sessionManagement()
 			.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 	}

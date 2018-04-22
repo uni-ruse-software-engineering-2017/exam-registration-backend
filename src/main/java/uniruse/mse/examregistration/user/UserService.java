@@ -28,7 +28,7 @@ public class UserService {
 	@Autowired
 	private BCryptPasswordEncoder encoder;
 
-	public void create(ApplicationUser user) {
+	public ApplicationUser create(ApplicationUser user) {
 		Optional<ApplicationUser> existingUser = this
 			.getByUsername(user.getUsername());
 
@@ -39,7 +39,7 @@ public class UserService {
 
 		user.setPassword(encoder.encode(user.getPassword()));
 
-		userRepository.save(user);
+		return userRepository.save(user);
 	}
 
 	public void create(SignUpUser user) {

@@ -30,4 +30,5 @@ public class AuthenticationResource {
 
 		return new ResponseEntity<>(HttpStatus.CREATED);
 	}
+
 }

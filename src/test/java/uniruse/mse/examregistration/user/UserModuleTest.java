@@ -1,10 +1,14 @@
 package uniruse.mse.examregistration.user;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -17,37 +21,38 @@ public class UserModuleTest extends BaseTest {
 	private UserService userService;
 
 	@Autowired
-	private UserRepository userRepository;
-
-	@Autowired
 	private BCryptPasswordEncoder encoder;
 
 	@Test
 	public void should_CreateUserAccount() throws Exception {
-		String userJson = "{ \"username\" : \"user1\", \"password\": \"123\","
-				+ "\"fullName\": \"User 1\", \"role\": \"STUDENT\"  }";
+		final Pair<ApplicationUser, String> admin = this.loginAsAdmin();
+		final String jwt = admin.getSecond();
 
-		this.post("/users", userJson)
+		final ApplicationUser testUser = this.getTestUser();
+		this.post("/users", this.toJson(testUser), jwt)
 			.andExpect(MockMvcResultMatchers.status()
-				.isCreated());
+			.isCreated());
 
-		ApplicationUser user = userRepository.findById(1L)
-			.get();
+		final ApplicationUser createdUser = userService.getByUsername(testUser.getUsername()).get();
 
-		assertEquals("user1", user.getUsername());
-		assertTrue("verify password encrypted",
-				encoder.matches("123", user.getPassword()));
+		assertEquals(testUser.getUsername(), createdUser.getUsername());
+		assertTrue(
+			"verify password is encrypted",
+			encoder.matches(testUser.getPassword(), createdUser.getPassword())
+		);
+		assertEquals(UserRole.STUDENT, createdUser.getRole());
 	}
 
 	@Test
 	public void should_ReportErrorWhenUserAlreadyExists() throws Exception {
-		String userJson = "{ \"username\" : \"user1\", \"password\": \"123\","
-				+ "\"fullName\": \"User 1\", \"role\": \"STUDENT\"  }";
+		final Pair<ApplicationUser, String> admin = this.loginAsAdmin();
+		final String jwt = admin.getSecond();
+		final String testUserJson = toJson(this.getTestUser());
 
-		this.post("/users", userJson);
-		this.post("/users", userJson)
+		this.post("/users", testUserJson, jwt);
+		this.post("/users", testUserJson, jwt)
 			.andExpect(MockMvcResultMatchers.status()
-				.isConflict());
+			.isConflict());
 	}
 
 	@Test
@@ -56,7 +61,7 @@ public class UserModuleTest extends BaseTest {
 		final String fullName = "Tsvetan Ganev";
 		final String password = "secret_pass";
 
-		SignUpUser newUserData = new SignUpUser() {
+		final SignUpUser newUserData = new SignUpUser() {
 			{
 				setUsername(username);
 				setPassword(password);
@@ -64,18 +69,20 @@ public class UserModuleTest extends BaseTest {
 			}
 		};
 
-		String jsonBody = toJson(newUserData);
-		this.post("/sign-up", jsonBody)
+		final String jsonBody = toJson(newUserData);
+		this.post("/sign-up", jsonBody, "")
 			.andExpect(MockMvcResultMatchers.status()
-				.isCreated());
+			.isCreated());
 
-		ApplicationUser signedUpUser = userService.getByUsername(username)
+		final ApplicationUser signedUpUser = userService.getByUsername(username)
 			.get();
 
 		assertEquals(username, signedUpUser.getUsername());
 		assertEquals(fullName, signedUpUser.getFullName());
-		assertTrue("verify password encrypted",
-				encoder.matches(password, signedUpUser.getPassword()));
+		assertTrue(
+			"verify password encrypted",
+			encoder.matches(password, signedUpUser.getPassword())
+		);
 		assertEquals(UserRole.STUDENT, signedUpUser.getRole());
 	}
 
@@ -85,7 +92,7 @@ public class UserModuleTest extends BaseTest {
 		final String fullName = "Plamenka Hristova";
 		final String password = "secret_pass";
 
-		SignUpUser newUserData = new SignUpUser() {
+		final SignUpUser newUserData = new SignUpUser() {
 			{
 				setUsername(username);
 				setPassword(password);
@@ -93,18 +100,20 @@ public class UserModuleTest extends BaseTest {
 			}
 		};
 
-		String jsonBody = toJson(newUserData);
-		this.post("/sign-up", jsonBody)
+		final String jsonBody = toJson(newUserData);
+		this.post("/sign-up", jsonBody, "")
 			.andExpect(MockMvcResultMatchers.status()
-				.isCreated());
+			.isCreated());
 
-		ApplicationUser signedUpUser = userService.getByUsername(username)
+		final ApplicationUser signedUpUser = userService.getByUsername(username)
 			.get();
 
 		assertEquals(username, signedUpUser.getUsername());
 		assertEquals(fullName, signedUpUser.getFullName());
-		assertTrue("verify password encrypted",
-				encoder.matches(password, signedUpUser.getPassword()));
+		assertTrue(
+			"verify password encrypted",
+			encoder.matches(password, signedUpUser.getPassword())
+		);
 		assertEquals(UserRole.PROFESSOR, signedUpUser.getRole());
 	}
 
@@ -114,7 +123,7 @@ public class UserModuleTest extends BaseTest {
 		final String fullName = "John Doe";
 		final String password = "secret_pass";
 
-		SignUpUser newUserData = new SignUpUser() {
+		final SignUpUser newUserData = new SignUpUser() {
 			{
 				setUsername(username);
 				setPassword(password);
@@ -122,9 +131,42 @@ public class UserModuleTest extends BaseTest {
 			}
 		};
 
-		String jsonBody = toJson(newUserData);
-		this.post("/sign-up", jsonBody)
-			.andExpect(MockMvcResultMatchers.status()
-				.isUnprocessableEntity());
+		final String jsonBody = toJson(newUserData);
+		this.post("/sign-up", jsonBody, "")
+			.andExpect(
+				MockMvcResultMatchers
+					.status()
+					.isUnprocessableEntity()
+			);
+	}
+
+	@Test
+	public void should_GetUserProfileForStudents() throws Exception {
+		final Pair<ApplicationUser, String> user = this.loginAsStudent();
+		final ApplicationUser userObj = user.getFirst();
+
+		this.get("/profile", user.getSecond())
+			.andExpect(status().isOk())
+			.andExpect(
+				jsonPath(
+					"$.username",
+					is(userObj.getUsername()
+				))
+			)
+			.andExpect(
+				jsonPath(
+					"$.fullName",
+					is(userObj.getFullName()
+				))
+			);
+	}
+
+	private ApplicationUser getTestUser() {
+		final ApplicationUser user = new ApplicationUser();
+		user.setUsername("s136510@stud.uni-ruse.bg");
+		user.setFullName("Tsvetan Ganev");
+		user.setPassword("123456");
+		user.setRole(UserRole.STUDENT);
+		return user;
 	}
 }

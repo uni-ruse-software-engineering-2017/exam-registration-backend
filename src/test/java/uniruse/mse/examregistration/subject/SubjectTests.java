@@ -2,11 +2,12 @@ package uniruse.mse.examregistration.subject;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import javax.transaction.Transactional;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -16,47 +17,62 @@ import uniruse.mse.examregistration.subject.SubjectResource.SubjectAssignmentReq
 import uniruse.mse.examregistration.user.UserRole;
 
 public class SubjectTests extends BaseTest {
+	private String adminJwt = "";
 
 	@Autowired
 	private SubjectRepository subjectRepository;
 
+	/**
+	 * Gets administrator JWT for authentication.
+	 * Runs before each test case.
+	 *
+	 * @throws Exception
+	 */
+	@Before
+	public void getAdminJwt() throws Exception {
+		adminJwt = this.loginAsAdmin().getSecond();
+	}
+
 	@Test
 	public void should_CreateSubject() throws Exception {
-		String subjectJson = fromFile("subject.json");
+		final String subjectJson = fromFile("subject.json");
 
-		this.post("/subjects", subjectJson)
-			.andExpect(MockMvcResultMatchers.status()
-				.isCreated());
+		this.post("/subjects", subjectJson, adminJwt)
+			.andExpect(
+				MockMvcResultMatchers.status()
+				.isCreated()
+			);
 
-		Subject subject = subjectRepository.findById(1L)
-			.get();
+		final Subject subject = subjectRepository.findById(1L).get();
 
 		assertEquals("mathematic", subject.getName());
 	}
 
+
 	@Test
 	public void should_NotAllowMultimpleSubjectsWithSameName()
 			throws Exception {
-		String subjectJson = fromFile("subject.json");
+		final String subjectJson = fromFile("subject.json");
 
-		this.post("/subjects", subjectJson);
-		this.post("/subjects", subjectJson)
+		this.post("/subjects", subjectJson, adminJwt);
+		this.post("/subjects", subjectJson, adminJwt)
 			.andExpect(MockMvcResultMatchers.status()
-				.isConflict());
+			.isConflict());
 	}
 
 	@Test
 	public void should_FetchAllSubjectsOrderedByName() throws Exception {
-		String subjectJson = fromFile("subject.json");
-		String informaticsSubject = subjectJson.replace("mathematic",
-				"informatics");
-		this.post("/subjects", informaticsSubject);
+		final String subjectJson = fromFile("subject.json");
+		final String informaticsSubject = subjectJson.replace("mathematic", "informatics");
+		this.post("/subjects", informaticsSubject, adminJwt)
+			.andExpect(status().isCreated());
 
-		String chemistrySubject = subjectJson.replace("mathematic",
-				"chemistry");
-		this.post("/subjects", chemistrySubject);
+		final String chemistrySubject = subjectJson.replace("mathematic", "chemistry");
+		this.post("/subjects", chemistrySubject, adminJwt)
+			.andExpect(status().isCreated());
 
-		mockMvc.perform(get("/subjects").contentType(contentType))
+		this.get("/subjects", adminJwt)
+			.andExpect(status().isOk())
 			.andExpect(jsonPath("$", hasSize(2)));
 	}
 
@@ -66,48 +82,42 @@ public class SubjectTests extends BaseTest {
 		createUser("grigorova", UserRole.PROFESSOR);
 		createUser("hristova", UserRole.PROFESSOR);
 
-		String subjectJson = fromFile("subject.json");
-		this.post("/subjects", subjectJson);
+		final String subjectJson = fromFile("subject.json");
+		this.post("/subjects", subjectJson, adminJwt);
 
-		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		final SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setAdded(new String[] { "grigorova", "hristova" });
 
-		this.patch("/subjects/1/assignees", toJson(request));
+		this.patch("/subjects/1/assignees", toJson(request), adminJwt);
 
-		Subject subject = subjectRepository.findById(1L)
-			.get();
+		final Subject subject = subjectRepository.findById(1L).get();
 
-		assertEquals(2, subject.getProfessors()
-			.size());
+		assertEquals(2, subject.getProfessors().size());
 	}
 
 	@Test
-	public void should_NotAssignProfessorWhenSubjectDoesNotExist()
-			throws Exception {
+	public void should_NotAssignProfessorWhenSubjectDoesNotExist() throws Exception {
 		createUser("grigorova", UserRole.PROFESSOR);
 
-		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		final SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setAdded(new String[] { "grigorova", "hristova" });
 
-		this.patch("/subjects/1/assignees", toJson(request))
-			.andExpect(MockMvcResultMatchers.status()
-				.isNotFound());
+		this.patch("/subjects/1/assignees", toJson(request), adminJwt)
+			.andExpect(status().isNotFound());
 	}
 
 	@Test
-	public void should_NotAllowAssigningNonProfessorToSubject()
-			throws Exception {
+	public void should_NotAllowAssigningNonProfessorToSubject() throws Exception {
 		createUser("grigorova", UserRole.STUDENT);
 
-		String subjectJson = fromFile("subject.json");
-		this.post("/subjects", subjectJson);
+		final String subjectJson = fromFile("subject.json");
+		this.post("/subjects", subjectJson, adminJwt);
 
-		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		final SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setAdded(new String[] { "grigorova" });
 
-		this.patch("/subjects/1/assignees", toJson(request))
-			.andExpect(MockMvcResultMatchers.status()
-				.isUnprocessableEntity());
+		this.patch("/subjects/1/assignees", toJson(request), adminJwt)
+			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
@@ -115,41 +125,36 @@ public class SubjectTests extends BaseTest {
 	public void should_UnassignProfessorToSubject() throws Exception {
 		createUser("grigorova", UserRole.PROFESSOR);
 
-		String subjectJson = fromFile("subject.json");
-		this.post("/subjects", subjectJson);
+		final String subjectJson = fromFile("subject.json");
+		this.post("/subjects", subjectJson, adminJwt);
 
 		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setAdded(new String[] { "grigorova" });
 
-		this.patch("/subjects/1/assignees", toJson(request));
+		this.patch("/subjects/1/assignees", toJson(request), adminJwt);
 
-		Subject subject = subjectRepository.findById(1L)
-			.get();
-		assertEquals(1, subject.getProfessors()
-			.size());
+		Subject subject = subjectRepository.findById(1L).get();
+		assertEquals(1, subject.getProfessors().size());
 
 		request = new SubjectAssignmentRequest();
 		request.setRemoved(new String[] { "grigorova" });
 
-		this.patch("/subjects/1/assignees", toJson(request));
+		this.patch("/subjects/1/assignees", toJson(request), adminJwt);
 
-		subject = subjectRepository.findById(1L)
-			.get();
-		assertEquals(0, subject.getProfessors()
-			.size());
+		subject = subjectRepository.findById(1L).get();
+		assertEquals(0, subject.getProfessors().size());
 	}
 
 	@Test
-	public void should_NotUnassignProfessorWhenSubjectDoesNotExist()
-			throws Exception {
+	public void should_NotUnassignProfessorWhenSubjectDoesNotExist() throws Exception {
 		createUser("grigorova", UserRole.PROFESSOR);
 
-		SubjectAssignmentRequest request = new SubjectAssignmentRequest();
+		final SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setRemoved(new String[] { "grigorova" });
 
-		this.post("/subjects/1", toJson(request))
+		this.post("/subjects/1", toJson(request), adminJwt)
 			.andExpect(MockMvcResultMatchers.status()
-				.isNotFound());
+			.isNotFound());
 	}
 
 }
