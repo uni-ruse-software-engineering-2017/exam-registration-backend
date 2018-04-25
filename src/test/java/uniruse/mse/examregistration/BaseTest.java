@@ -4,6 +4,8 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import uniruse.mse.examregistration.user.UserRole;
@@ -85,7 +88,7 @@ public abstract class BaseTest {
 	 */
 	protected ResultActions get(String url, String jwt) throws Exception {
 		return this.mockMvc.perform(MockMvcRequestBuilders.get(url)
-			.header("Authorization", jwt)
+			.header("Authorization", jwt != "" ? "Bearer " + jwt : "")
 			.accept(MediaType.APPLICATION_JSON)
 		);
 	}
@@ -106,7 +109,7 @@ public abstract class BaseTest {
 	 */
 	protected ResultActions post(String url, String jsonBody, String jwt) throws Exception {
 		return this.mockMvc.perform(MockMvcRequestBuilders.post(url)
-			.header("Authorization", jwt)
+			.header("Authorization", jwt != "" ? "Bearer " + jwt : "")
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(jsonBody)
@@ -130,7 +133,7 @@ public abstract class BaseTest {
 			throws Exception {
 
 		return this.mockMvc.perform(MockMvcRequestBuilders.patch(url)
-			.header("Authorization", jwt)
+			.header("Authorization", jwt != "" ? "Bearer " + jwt : "")
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(jsonBody));
@@ -177,8 +180,7 @@ public abstract class BaseTest {
 			setPassword(password);
 		}};
 
-		final MockHttpServletResponse loginResponse = this.login(credentials);
-		final String jwt = loginResponse.getHeader("Authorization");
+		final String jwt = this.login(credentials);
 
 		return Pair.of(testUser, jwt);
 	}
@@ -204,9 +206,7 @@ public abstract class BaseTest {
 			setPassword(password);
 		}};
 
-
-		final MockHttpServletResponse loginResponse = this.login(credentials);
-		final String jwt = loginResponse.getHeader("Authorization");
+		final String jwt = this.login(credentials);
 
 		return Pair.of(testUser, jwt);
 	}
@@ -215,16 +215,24 @@ public abstract class BaseTest {
 	 * Performs a login request.
 	 *
 	 * @param credentials - user credentials to authenticate with
-	 * @return HTTP response
+	 * @return JWT token
 	 * @throws Exception
 	 */
-	protected MockHttpServletResponse login(LoginUser credentials) throws Exception {
+	protected String login(LoginUser credentials) throws Exception {
 		final String jsonBody = toJson(credentials);
 
 		final MockHttpServletResponse response = this.post("/login", jsonBody, "")
 			.andReturn()
 			.getResponse();
 
-		return response;
+		// convert JSON string to HashMap<String, String>
+		final ObjectMapper mapper = new ObjectMapper();
+		Map<String, String> jsonResult = new HashMap<>();
+		jsonResult = mapper.readValue(
+			response.getContentAsString(),
+			new TypeReference<Map<String, String>>(){}
+		);
+
+		return jsonResult.get("token");
 	}
 }

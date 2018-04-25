@@ -1,10 +1,8 @@
 package uniruse.mse.examregistration.security;
 
 import static uniruse.mse.examregistration.security.SecurityConstants.EXPIRATION_TIME;
-import static uniruse.mse.examregistration.security.SecurityConstants.HEADER_STRING;
 import static uniruse.mse.examregistration.security.SecurityConstants.ISSUER;
 import static uniruse.mse.examregistration.security.SecurityConstants.SECRET;
-import static uniruse.mse.examregistration.security.SecurityConstants.TOKEN_PREFIX;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,7 +12,6 @@ import java.util.Map;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,8 +28,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import uniruse.mse.examregistration.user.model.LoginUser;
 
-public class JWTAuthenticationFilter
-		extends UsernamePasswordAuthenticationFilter {
+public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	private final AuthenticationManager authenticationManager;
 
 	public JWTAuthenticationFilter(
@@ -41,11 +37,15 @@ public class JWTAuthenticationFilter
 	}
 
 	@Override
-	public Authentication attemptAuthentication(HttpServletRequest req,
-			HttpServletResponse res) throws AuthenticationException {
+	public Authentication attemptAuthentication(
+		HttpServletRequest req,
+		HttpServletResponse res
+	) throws AuthenticationException {
 		try {
-			final LoginUser creds = new ObjectMapper()
-				.readValue(req.getInputStream(), LoginUser.class);
+			final LoginUser creds = new ObjectMapper().readValue(
+				req.getInputStream(),
+				LoginUser.class
+			);
 
 			final UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 				creds.getUsername(),
@@ -89,13 +89,12 @@ public class JWTAuthenticationFilter
 			.signWith(SignatureAlgorithm.HS512, SECRET.getBytes())
 			.compact();
 
-		// set the JWT as a header
-		res.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
-
-		// set the JWT as the 'session' cookie key value
-		final Cookie jwtCookie = new Cookie("session", token);
-		jwtCookie.setSecure(true);
-		jwtCookie.setHttpOnly(true);
-		res.addCookie(jwtCookie);
+		// return a JSON response with the token
+		final ObjectMapper mapper = new ObjectMapper();
+		final Map<String, String> jsonResponse = new HashMap<>();
+		jsonResponse.put("token", token);
+		res.setContentType("application/json;charset=UTF-8");
+		res.getWriter().print(mapper.writeValueAsString(jsonResponse));
+		res.getWriter().flush();
 	}
 }

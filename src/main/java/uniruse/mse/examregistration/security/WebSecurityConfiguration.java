@@ -1,6 +1,7 @@
 package uniruse.mse.examregistration.security;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -83,10 +84,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 	 */
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
-	    final CorsConfiguration configuration = new CorsConfiguration();
-	    configuration.setAllowedOrigins(Arrays.asList("*"));
-	    configuration.setAllowCredentials(true);
-	    configuration.setAllowedHeaders(Arrays.asList(
+		final List<String> allowedHeaders = Arrays.asList(
 			"Access-Control-Allow-Headers",
 			"Access-Control-Allow-Origin",
 			"Access-Control-Request-Method",
@@ -95,7 +93,13 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 			"Cache-Control",
 			"Content-Type",
 			"Authorization"
-		));
+		);
+
+	    final CorsConfiguration configuration = new CorsConfiguration();
+	    configuration.setAllowedOrigins(Arrays.asList("*"));
+	    configuration.setAllowCredentials(true);
+	    configuration.setExposedHeaders(allowedHeaders);
+	    configuration.setAllowedHeaders(allowedHeaders);
 	    configuration.setAllowedMethods(Arrays.asList(
 			"GET",
 			"POST",
