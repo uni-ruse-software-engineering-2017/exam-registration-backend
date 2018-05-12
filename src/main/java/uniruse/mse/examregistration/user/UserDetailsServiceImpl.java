@@ -34,6 +34,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 		User user = new User(
 			appUser.getUsername(),
 			appUser.getPassword(),
+			appUser.isActive(), true, true, true,
 			this.getGrantedAuthorities(
 				Arrays.asList(appUser.getRole().name())
 			)

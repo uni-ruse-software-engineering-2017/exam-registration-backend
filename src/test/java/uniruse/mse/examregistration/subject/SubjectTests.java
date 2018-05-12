@@ -79,8 +79,8 @@ public class SubjectTests extends BaseTest {
 	@Test
 	@Transactional
 	public void should_AssignProfessorToSubject() throws Exception {
-		createUser("grigorova", UserRole.PROFESSOR);
-		createUser("hristova", UserRole.PROFESSOR);
+		createUser("grigorova", "123456", UserRole.PROFESSOR);
+		createUser("hristova", "123456", UserRole.PROFESSOR);
 
 		final String subjectJson = fromFile("subject.json");
 		this.post("/subjects", subjectJson, adminJwt);
@@ -97,7 +97,7 @@ public class SubjectTests extends BaseTest {
 
 	@Test
 	public void should_NotAssignProfessorWhenSubjectDoesNotExist() throws Exception {
-		createUser("grigorova", UserRole.PROFESSOR);
+		createUser("grigorova", "123456", UserRole.PROFESSOR);
 
 		final SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setAdded(new String[] { "grigorova", "hristova" });
@@ -108,7 +108,7 @@ public class SubjectTests extends BaseTest {
 
 	@Test
 	public void should_NotAllowAssigningNonProfessorToSubject() throws Exception {
-		createUser("grigorova", UserRole.STUDENT);
+		createUser("grigorova", "123456", UserRole.STUDENT);
 
 		final String subjectJson = fromFile("subject.json");
 		this.post("/subjects", subjectJson, adminJwt);
@@ -123,7 +123,7 @@ public class SubjectTests extends BaseTest {
 	@Test
 	@Transactional
 	public void should_UnassignProfessorToSubject() throws Exception {
-		createUser("grigorova", UserRole.PROFESSOR);
+		createUser("grigorova", "123456", UserRole.PROFESSOR);
 
 		final String subjectJson = fromFile("subject.json");
 		this.post("/subjects", subjectJson, adminJwt);
@@ -147,7 +147,7 @@ public class SubjectTests extends BaseTest {
 
 	@Test
 	public void should_NotUnassignProfessorWhenSubjectDoesNotExist() throws Exception {
-		createUser("grigorova", UserRole.PROFESSOR);
+		createUser("grigorova", "123456", UserRole.PROFESSOR);
 
 		final SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setRemoved(new String[] { "grigorova" });

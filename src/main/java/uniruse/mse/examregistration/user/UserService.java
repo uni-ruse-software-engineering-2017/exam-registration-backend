@@ -8,9 +8,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import uniruse.mse.examregistration.InvalidEmailAddressException;
 import uniruse.mse.examregistration.ObjectAlreadyExistsException;
+import uniruse.mse.examregistration.ObjectNotFoundException;
+import uniruse.mse.examregistration.OperationNotAllowedException;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.SignUpUser;
 
@@ -26,6 +29,7 @@ public class UserService {
 	@Autowired
 	private BCryptPasswordEncoder encoder;
 
+	@Transactional
 	public ApplicationUser create(ApplicationUser user) {
 		Optional<ApplicationUser> existingUser = this.getByUsername(user.getUsername());
 
@@ -34,10 +38,12 @@ public class UserService {
 		}
 
 		user.setPassword(encoder.encode(user.getPassword()));
+		user.setActive(false);
 
 		return userRepository.save(user);
 	}
 
+	@Transactional
 	public void create(SignUpUser user) {
 		Optional<ApplicationUser> existingUser = this.getByUsername(user.getUsername());
 
@@ -50,10 +56,12 @@ public class UserService {
 		newUser.setPassword(encoder.encode(user.getPassword()));
 		newUser.setFullName("");
 		newUser.setRole(this.getRoleFromEmail(user.getUsername()));
+		newUser.setActive(false);
 
 		userRepository.save(newUser);
 	}
 
+	@Transactional(readOnly = true)
 	public Optional<ApplicationUser> getByUsername(String username) {
 		if ("" == username || null == username) {
 			return Optional.empty();
@@ -73,6 +81,34 @@ public class UserService {
 		}
 
 		throw new InvalidEmailAddressException("Invalid email address provided.");
+	}
+
+	@Transactional
+	public void activate(String username, String token) {
+		Optional<ApplicationUser> userOptional = getByUsername(username);
+
+		ApplicationUser user = userOptional.orElseThrow(() -> new ObjectNotFoundException("User '" + username + "' does not exist"));
+
+		if (user.isActive()) {
+			throw new OperationNotAllowedException("Account already activated");
+		}
+
+		if (!encoder.matches(user.getId() + user.getUsername(), token)) {
+			throw new OperationNotAllowedException("Provided token does not match");
+		}
+
+		user.setActive(true);
+
+		userRepository.save(user);
+	}
+
+	@Transactional(readOnly = true)
+	public String generateActicationToken(String username) {
+		Optional<ApplicationUser> userOptional = getByUsername(username);
+
+		ApplicationUser user = userOptional.orElseThrow(() -> new ObjectNotFoundException("User '" + username + "' does not exist"));
+
+		return encoder.encode(user.getId() + user.getUsername());
 	}
 
 	@Bean
