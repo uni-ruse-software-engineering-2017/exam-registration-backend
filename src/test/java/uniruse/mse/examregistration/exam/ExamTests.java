@@ -30,7 +30,7 @@ public class ExamTests extends BaseTest {
 	@Test
 	@Transactional
 	public void test() {
-		ApplicationUser professor = createUser("grigorova", UserRole.PROFESSOR);
+		ApplicationUser professor = createUser("grigorova", "123456", UserRole.PROFESSOR);
 		Subject programming = createSubject("programming");
 
 		Exam exam = new Exam();
@@ -44,7 +44,7 @@ public class ExamTests extends BaseTest {
 
 		examRepository.save(exam);
 
-		ApplicationUser student = createUser("gosho", UserRole.STUDENT);
+		ApplicationUser student = createUser("gosho", "123456", UserRole.STUDENT);
 
 		ExamParticipationRequest request = new ExamParticipationRequest();
 

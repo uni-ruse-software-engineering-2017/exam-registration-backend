@@ -37,11 +37,8 @@ public class UserResource {
 	@ResponseBody
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public ApplicationUser create(@RequestBody ApplicationUser user) {
-		final ApplicationUser createdUser = userService.create(user);
-
-		return createdUser;
+		return userService.create(user);
 	}
-
 
 	/**
 	 * GET /profile

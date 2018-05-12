@@ -29,6 +29,8 @@ public class ApplicationUser {
 	@Column(length = 8)
 	private UserRole role;
 
+	private Boolean active;
+
 	public String getUsername() {
 		return username;
 	}
@@ -67,6 +69,14 @@ public class ApplicationUser {
 
 	public void setFullName(String fullName) {
 		this.fullName = fullName;
+	}
+
+	public Boolean isActive() {
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
 	}
 
 }

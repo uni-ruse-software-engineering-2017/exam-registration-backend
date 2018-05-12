@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.apache.commons.io.IOUtils;
+import org.h2.util.StringUtils;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -87,10 +89,13 @@ public abstract class BaseTest {
 	 * @throws Exception
 	 */
 	protected ResultActions get(String url, String jwt) throws Exception {
-		return this.mockMvc.perform(MockMvcRequestBuilders.get(url)
-			.header("Authorization", jwt != "" ? "Bearer " + jwt : "")
-			.accept(MediaType.APPLICATION_JSON)
-		);
+		MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get(url).accept(MediaType.APPLICATION_JSON);
+
+		if (!StringUtils.isNullOrEmpty(jwt)) {
+			builder.header("Authorization", "Bearer " + jwt);
+		}
+
+		return this.mockMvc.perform(builder);
 	}
 
 
@@ -147,14 +152,22 @@ public abstract class BaseTest {
 		}
 	}
 
-	protected ApplicationUser createUser(String name, UserRole role) {
+	protected ApplicationUser createUser(String name, String password, UserRole role) {
 		final ApplicationUser user = new ApplicationUser();
 		user.setUsername(name);
-		user.setPassword("123456");
+		user.setPassword(password);
 		user.setFullName("Test 123");
 		user.setRole(role);
 
-		userService.create(user);
+		return userService.create(user);
+	}
+
+	protected ApplicationUser createActiveUser(String name, String password, UserRole role) {
+		final ApplicationUser user = createUser(name, password, role);
+
+		String token = userService.generateActicationToken(name);
+
+		userService.activate(name, token);
 
 		return user;
 	}
@@ -168,13 +181,8 @@ public abstract class BaseTest {
 	protected Pair<ApplicationUser, String> loginAsStudent() throws Exception {
 		final String username = "s136500@stud.uni-ruse.bg";
 		final String password = "12345678";
-		final ApplicationUser user = new ApplicationUser();
-		user.setUsername(username);
-		user.setPassword(password);
-		user.setFullName("John Doe");
-		user.setRole(UserRole.STUDENT);
+		ApplicationUser user = createActiveUser(username, password, UserRole.STUDENT);
 
-		final ApplicationUser testUser = userService.create(user);
 		final LoginUser credentials = new LoginUser() {{
 			setUsername(username);
 			setPassword(password);
@@ -182,7 +190,7 @@ public abstract class BaseTest {
 
 		final String jwt = this.login(credentials);
 
-		return Pair.of(testUser, jwt);
+		return Pair.of(user, jwt);
 	}
 
 	/**
@@ -194,13 +202,8 @@ public abstract class BaseTest {
 	protected Pair<ApplicationUser, String> loginAsAdmin() throws Exception {
 		final String username = "admin@exams.uni-ruse.bg";
 		final String password = "12345678";
-		final ApplicationUser user = new ApplicationUser();
-		user.setUsername(username);
-		user.setPassword(password);
-		user.setFullName("Administrator");
-		user.setRole(UserRole.ADMIN);
+		ApplicationUser user = createActiveUser(username, password, UserRole.ADMIN);
 
-		final ApplicationUser testUser = userService.create(user);
 		final LoginUser credentials = new LoginUser() {{
 			setUsername(username);
 			setPassword(password);
@@ -208,7 +211,7 @@ public abstract class BaseTest {
 
 		final String jwt = this.login(credentials);
 
-		return Pair.of(testUser, jwt);
+		return Pair.of(user, jwt);
 	}
 
 	/**
@@ -224,6 +227,10 @@ public abstract class BaseTest {
 		final MockHttpServletResponse response = this.post("/login", jsonBody, "")
 			.andReturn()
 			.getResponse();
+
+		if (response.getStatus() != 200) {
+			throw new IllegalArgumentException("Login failed");
+		}
 
 		// convert JSON string to HashMap<String, String>
 		final ObjectMapper mapper = new ObjectMapper();
