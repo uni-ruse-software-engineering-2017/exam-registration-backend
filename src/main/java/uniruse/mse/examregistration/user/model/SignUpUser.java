@@ -9,7 +9,6 @@ public class SignUpUser {
 
 	private String username;
 	private String password;
-	private String fullName;
 
 	@JsonGetter("username")
 	public String getUsername() {
@@ -27,14 +26,5 @@ public class SignUpUser {
 
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	@JsonGetter("fullName")
-	public String getFullName() {
-		return fullName;
-	}
-
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
 	}
 }

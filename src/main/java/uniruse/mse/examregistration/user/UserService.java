@@ -16,11 +16,9 @@ import uniruse.mse.examregistration.user.model.SignUpUser;
 
 @Service
 public class UserService {
-	private static final Pattern STUDENT_EMAIL_REGEX = Pattern
-		.compile("^s[0-9]{6}@stud\\.uni-ruse\\.bg$");
+	private static final Pattern STUDENT_EMAIL_REGEX = Pattern.compile("^s[0-9]{6}@stud\\.uni-ruse\\.bg$");
 
-	private static final Pattern PROFESSOR_EMAIL_REGEX = Pattern
-		.compile("^([\\w\\.\\-_]+)?\\w+@ami\\.uni-ruse\\.bg$");
+	private static final Pattern PROFESSOR_EMAIL_REGEX = Pattern.compile("^([\\w\\.\\-_]+)?\\w+@ami\\.uni-ruse\\.bg$");
 
 	@Autowired
 	private UserRepository userRepository;
@@ -29,12 +27,10 @@ public class UserService {
 	private BCryptPasswordEncoder encoder;
 
 	public ApplicationUser create(ApplicationUser user) {
-		Optional<ApplicationUser> existingUser = this
-			.getByUsername(user.getUsername());
+		Optional<ApplicationUser> existingUser = this.getByUsername(user.getUsername());
 
 		if (existingUser.isPresent()) {
-			throw new ObjectAlreadyExistsException("User with username '"
-					+ user.getUsername() + "' already exists");
+			throw new ObjectAlreadyExistsException("User with username '" + user.getUsername() + "' already exists");
 		}
 
 		user.setPassword(encoder.encode(user.getPassword()));
@@ -43,18 +39,16 @@ public class UserService {
 	}
 
 	public void create(SignUpUser user) {
-		Optional<ApplicationUser> existingUser = this
-			.getByUsername(user.getUsername());
+		Optional<ApplicationUser> existingUser = this.getByUsername(user.getUsername());
 
 		if (existingUser.isPresent()) {
-			throw new ObjectAlreadyExistsException("User with username '"
-					+ user.getUsername() + "' already exists");
+			throw new ObjectAlreadyExistsException("User with username '" + user.getUsername() + "' already exists");
 		}
 
 		ApplicationUser newUser = new ApplicationUser();
 		newUser.setUsername(user.getUsername());
-		newUser.setFullName(user.getFullName());
 		newUser.setPassword(encoder.encode(user.getPassword()));
+		newUser.setFullName("");
 		newUser.setRole(this.getRoleFromEmail(user.getUsername()));
 
 		userRepository.save(newUser);
@@ -72,16 +66,13 @@ public class UserService {
 	}
 
 	private UserRole getRoleFromEmail(String emailAddress) {
-		if (STUDENT_EMAIL_REGEX.matcher(emailAddress)
-			.matches()) {
+		if (STUDENT_EMAIL_REGEX.matcher(emailAddress).matches()) {
 			return UserRole.STUDENT;
-		} else if (PROFESSOR_EMAIL_REGEX.matcher(emailAddress)
-			.matches()) {
+		} else if (PROFESSOR_EMAIL_REGEX.matcher(emailAddress).matches()) {
 			return UserRole.PROFESSOR;
 		}
 
-		throw new InvalidEmailAddressException(
-				"Invalid email address provided.");
+		throw new InvalidEmailAddressException("Invalid email address provided.");
 	}
 
 	@Bean
