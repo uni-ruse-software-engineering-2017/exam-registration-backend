@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -13,10 +14,14 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 
 @Entity
 @Table(name = "subject")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Subject {
 
 	@Id
@@ -28,7 +33,7 @@ public class Subject {
 
 	private String description;
 
-	@ManyToMany
+	@ManyToMany()
 	@JoinTable(name = "subject_professor",
 		joinColumns = @JoinColumn(name = "subject_id", referencedColumnName = "id"),
 		inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
@@ -57,7 +62,8 @@ public class Subject {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
+	
+    @JsonIgnore
 	public List<ApplicationUser> getProfessors() {
 		return professors;
 	}

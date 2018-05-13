@@ -3,6 +3,7 @@ package uniruse.mse.examregistration.subject;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 
 import java.util.List;
 
@@ -12,7 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import uniruse.mse.examregistration.ObjectNotFoundException;
 
 @RestController
 @RequestMapping("/subjects")
@@ -22,15 +27,32 @@ public class SubjectResource {
 	private SubjectService subjectService;
 
 	@RequestMapping(method = POST)
-	public ResponseEntity<?> create(@RequestBody Subject subject) {
-		subjectService.create(subject);
-
-		return new ResponseEntity<>(HttpStatus.CREATED);
+	@ResponseBody()
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public Subject create(@RequestBody Subject subject) {
+		return subjectService.create(subject);
 	}
 
 	@RequestMapping(method = GET)
 	public List<Subject> getSubjets() {
 		return subjectService.getSubjects();
+	}
+	
+	@RequestMapping(method = GET, path = "/{subjectId}")
+	public Subject getSubject(@PathVariable Long subjectId) {
+		Subject subj = subjectService.getSubjectById(subjectId);
+		
+		if (subj == null) {
+			throw new ObjectNotFoundException("Subject with ID " + subjectId + " was not found.");
+		}
+		
+		return subj;
+	}
+
+	@RequestMapping(method = DELETE, path = "/{subjectId}")
+	@ResponseStatus(code = HttpStatus.NO_CONTENT)
+	public void deleteSubject(@PathVariable Long subjectId) {
+		subjectService.deleteSubject(subjectId);
 	}
 
 	@RequestMapping(method = PATCH, path = "/{id}/assignees")
