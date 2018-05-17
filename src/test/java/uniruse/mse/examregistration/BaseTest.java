@@ -31,12 +31,13 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import uniruse.mse.examregistration.user.UserRole;
 import uniruse.mse.examregistration.user.UserService;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.LoginUser;
+import uniruse.mse.examregistration.user.model.UserRole;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
@@ -89,7 +90,7 @@ public abstract class BaseTest {
 	 * @throws Exception
 	 */
 	protected ResultActions get(String url, String jwt) throws Exception {
-		MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get(url).accept(MediaType.APPLICATION_JSON);
+		final MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get(url).accept(MediaType.APPLICATION_JSON);
 
 		if (!StringUtils.isNullOrEmpty(jwt)) {
 			builder.header("Authorization", "Bearer " + jwt);
@@ -146,7 +147,12 @@ public abstract class BaseTest {
 
 	protected String toJson(Object object) {
 		try {
-			return new ObjectMapper().writeValueAsString(object);
+			final ObjectMapper mapper = new ObjectMapper();
+
+			// ignore annotations - include all fields even if ignored
+			mapper.disable(MapperFeature.USE_ANNOTATIONS);
+
+			return mapper.writeValueAsString(object);
 		} catch (final JsonProcessingException e) {
 			throw new IllegalArgumentException(e);
 		}
@@ -165,7 +171,7 @@ public abstract class BaseTest {
 	protected ApplicationUser createActiveUser(String name, String password, UserRole role) {
 		final ApplicationUser user = createUser(name, password, role);
 
-		String token = userService.generateActicationToken(name);
+		final String token = userService.generateActicationToken(name);
 
 		userService.activate(name, token);
 
@@ -181,7 +187,7 @@ public abstract class BaseTest {
 	protected Pair<ApplicationUser, String> loginAsStudent() throws Exception {
 		final String username = "s136500@stud.uni-ruse.bg";
 		final String password = "12345678";
-		ApplicationUser user = createActiveUser(username, password, UserRole.STUDENT);
+		final ApplicationUser user = createActiveUser(username, password, UserRole.STUDENT);
 
 		final LoginUser credentials = new LoginUser() {{
 			setUsername(username);
@@ -202,7 +208,7 @@ public abstract class BaseTest {
 	protected Pair<ApplicationUser, String> loginAsAdmin() throws Exception {
 		final String username = "admin@exams.uni-ruse.bg";
 		final String password = "12345678";
-		ApplicationUser user = createActiveUser(username, password, UserRole.ADMIN);
+		final ApplicationUser user = createActiveUser(username, password, UserRole.ADMIN);
 
 		final LoginUser credentials = new LoginUser() {{
 			setUsername(username);

@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import uniruse.mse.examregistration.BaseTest;
 import uniruse.mse.examregistration.subject.SubjectResource.SubjectAssignmentRequest;
-import uniruse.mse.examregistration.user.UserRole;
+import uniruse.mse.examregistration.user.model.UserRole;
 
 public class SubjectTests extends BaseTest {
 	private String adminJwt = "";

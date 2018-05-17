@@ -3,8 +3,6 @@ package uniruse.mse.examregistration.user;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import uniruse.mse.examregistration.user.model.ApplicationUser;
+import uniruse.mse.examregistration.user.model.UserRole;
 
 @RestController
 public class UserResource {
@@ -51,12 +50,15 @@ public class UserResource {
 	@RequestMapping(method = GET, path = "/profile")
 	@ResponseBody()
 	public ApplicationUser login(Authentication auth) {
-		final Optional<ApplicationUser> appUser = userService.getByUsername(auth.getName());
+		final ApplicationUser appUser = userService.getByUsername(auth.getName())
+			.orElseThrow(() -> new UsernameNotFoundException(
+				"User with username " + auth.getName() + " was not found."
+			));
 
-		if (!appUser.isPresent()) {
-			throw new UsernameNotFoundException("User with username " + auth.getName() + " was not found.");
+		if (appUser.getRole() == UserRole.STUDENT) {
+			return appUser;
 		}
 
-		return appUser.get();
+		return appUser;
 	}
 }

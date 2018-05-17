@@ -7,12 +7,15 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
-import uniruse.mse.examregistration.user.UserRole;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "application_user")
+@Inheritance(strategy=InheritanceType.JOINED)
 public class ApplicationUser {
 
 	@Id
@@ -21,6 +24,7 @@ public class ApplicationUser {
 
 	private String username;
 
+	@JsonIgnore()
 	private String password;
 
 	private String fullName;
@@ -30,6 +34,16 @@ public class ApplicationUser {
 	private UserRole role;
 
 	private Boolean active;
+
+	public ApplicationUser() {}
+
+	public ApplicationUser(String username, String password, String fullName, UserRole role) {
+		this.username = username;
+		this.password = password;
+		this.fullName = fullName;
+		this.role = role;
+		this.active = false;
+	}
 
 	public String getUsername() {
 		return username;

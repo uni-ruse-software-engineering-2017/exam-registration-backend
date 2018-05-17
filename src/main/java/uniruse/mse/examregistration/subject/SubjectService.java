@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 import uniruse.mse.examregistration.ObjectAlreadyExistsException;
 import uniruse.mse.examregistration.ObjectNotFoundException;
 import uniruse.mse.examregistration.OperationNotAllowedException;
-import uniruse.mse.examregistration.user.UserRole;
 import uniruse.mse.examregistration.user.UserService;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
+import uniruse.mse.examregistration.user.model.UserRole;
 
 @Service
 public class SubjectService {

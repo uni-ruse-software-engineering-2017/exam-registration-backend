@@ -13,8 +13,8 @@ import uniruse.mse.examregistration.BaseTest;
 import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.subject.SubjectService;
-import uniruse.mse.examregistration.user.UserRole;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
+import uniruse.mse.examregistration.user.model.UserRole;
 
 public class ExamTests extends BaseTest {
 

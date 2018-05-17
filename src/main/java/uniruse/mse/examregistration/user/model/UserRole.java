@@ -1,4 +1,4 @@
-package uniruse.mse.examregistration.user;
+package uniruse.mse.examregistration.user.model;
 
 public enum UserRole {
 
