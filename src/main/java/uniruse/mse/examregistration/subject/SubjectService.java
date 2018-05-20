@@ -25,7 +25,7 @@ public class SubjectService {
 	@Autowired
 	private UserService userService;
 
-	public void create(Subject subject) {
+	public Subject create(Subject subject) {
 		Subject example = new Subject();
 		example.setName(subject.getName());
 
@@ -35,11 +35,23 @@ public class SubjectService {
 			throw new ObjectAlreadyExistsException("Subject with username '" + subject.getName() + "' already exists");
 		}
 
-		subjectRepository.save(subject);
+		return subjectRepository.save(subject);
 	}
 
 	public List<Subject> getSubjects() {
 		return subjectRepository.findAll(new Sort(Direction.ASC, "name"));
+	}
+	
+	public Subject getSubjectById(Long id) {
+		if(!subjectRepository.existsById(id)) {
+			return null;
+		};
+		
+		return subjectRepository.getOne(id);
+	}
+
+	public void deleteSubject(Long id ) {
+		subjectRepository.deleteById(id);
 	}
 
 	public void updateAssignees(Long subjectId, String[] added, String[] removed) {

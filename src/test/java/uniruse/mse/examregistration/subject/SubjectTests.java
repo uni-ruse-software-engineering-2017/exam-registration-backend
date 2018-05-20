@@ -152,7 +152,7 @@ public class SubjectTests extends BaseTest {
 		final SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setRemoved(new String[] { "grigorova" });
 
-		this.post("/subjects/1", toJson(request), adminJwt)
+		this.patch("/subjects/1/assignees", toJson(request), adminJwt)
 			.andExpect(MockMvcResultMatchers.status()
 			.isNotFound());
 	}
