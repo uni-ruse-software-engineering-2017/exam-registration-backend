@@ -41,7 +41,7 @@ public class Student extends ApplicationUser {
 			userData.getUsername(),
 			userData.getPassword(),
 			userData.getFullName(),
-			userData.getRole()
+			UserRole.STUDENT
 		);
 
 		this.setActive(userData.isActive());

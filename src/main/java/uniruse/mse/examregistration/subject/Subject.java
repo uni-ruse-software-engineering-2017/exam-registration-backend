@@ -23,7 +23,6 @@ import uniruse.mse.examregistration.user.model.ApplicationUser;
 @Table(name = "subject")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Subject {
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
