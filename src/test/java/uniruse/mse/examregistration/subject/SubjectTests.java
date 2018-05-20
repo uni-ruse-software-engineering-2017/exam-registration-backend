@@ -37,7 +37,7 @@ public class SubjectTests extends BaseTest {
 	public void should_CreateSubject() throws Exception {
 		final String subjectJson = fromFile("subject.json");
 
-		this.patch("/subjects", subjectJson, adminJwt)
+		this.post("/subjects", subjectJson, adminJwt)
 			.andExpect(
 				MockMvcResultMatchers.status()
 				.isCreated()
@@ -152,7 +152,7 @@ public class SubjectTests extends BaseTest {
 		final SubjectAssignmentRequest request = new SubjectAssignmentRequest();
 		request.setRemoved(new String[] { "grigorova" });
 
-		this.patch("/subjects/1", toJson(request), adminJwt)
+		this.patch("/subjects/1/assignees", toJson(request), adminJwt)
 			.andExpect(MockMvcResultMatchers.status()
 			.isNotFound());
 	}
