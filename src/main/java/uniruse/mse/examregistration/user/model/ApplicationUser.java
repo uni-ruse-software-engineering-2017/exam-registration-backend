@@ -11,8 +11,6 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 @Entity
 @Table(name = "application_user")
 @Inheritance(strategy=InheritanceType.JOINED)
@@ -24,7 +22,6 @@ public class ApplicationUser {
 
 	private String username;
 
-	@JsonIgnore()
 	private String password;
 
 	private String fullName;

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -33,9 +32,11 @@ public class Subject {
 	private String description;
 
 	@ManyToMany()
-	@JoinTable(name = "subject_professor",
+	@JoinTable(
+		name = "subject_professor",
 		joinColumns = @JoinColumn(name = "subject_id", referencedColumnName = "id"),
-		inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+		inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id")
+	)
 	private List<ApplicationUser> professors = new ArrayList<>();
 
 	public Long getId() {
@@ -61,7 +62,7 @@ public class Subject {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
+
     @JsonIgnore
 	public List<ApplicationUser> getProfessors() {
 		return professors;

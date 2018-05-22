@@ -1,11 +1,12 @@
 package uniruse.mse.examregistration.user.model;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
@@ -15,21 +16,19 @@ import uniruse.mse.examregistration.subject.Subject;
 @Entity
 @Table(name = "professor")
 @PrimaryKeyJoinColumn(name="user_id")
-public class Professor extends ApplicationUser {
+public class Professor extends ApplicationUser implements Serializable {
+	private static final long serialVersionUID = 4331258974925880125L;
+
 	private String cabinet;
 
 	private String phoneNumber;
 
-	@ManyToMany
-	@JoinTable(
-		name = "subject_professor",
-		joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-		inverseJoinColumns = @JoinColumn(name = "subject_id", referencedColumnName = "id")
-	)
-	private List<Subject> subjectsTeaching;
+	@ManyToMany(mappedBy="professors", fetch=FetchType.EAGER)
+	private List<Subject> subjectsTeaching = new ArrayList<>();
 
 	public Professor() {
 		super();
+		this.setRole(UserRole.PROFESSOR);
 	}
 
 	public Professor(ApplicationUser userData, String cabinet, String phoneNumber) {
@@ -65,7 +64,15 @@ public class Professor extends ApplicationUser {
 	}
 
 	public List<Subject> getSubjectsTeaching() {
-		return this.getSubjectsTeaching().stream().collect(Collectors.toList());
+		return this.subjectsTeaching.stream().collect(Collectors.toList());
+	}
+
+	public void setSubjectsTeaching(List<Subject> subjects) {
+		if (subjects == null) {
+			subjects = new ArrayList<>();
+		}
+
+		this.subjectsTeaching = subjects;
 	}
 
 	public List<Subject> addSubjectTeaching(Subject subj) {

@@ -1,15 +1,14 @@
 package uniruse.mse.examregistration.subject;
 
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,15 +36,16 @@ public class SubjectResource {
 	public List<Subject> getSubjets() {
 		return subjectService.getSubjects();
 	}
-	
+
 	@RequestMapping(method = GET, path = "/{subjectId}")
 	public Subject getSubject(@PathVariable Long subjectId) {
-		Subject subj = subjectService.getSubjectById(subjectId);
-		
+		final Subject subj = subjectService.getSubjectById(subjectId);
+
 		if (subj == null) {
-			throw new ObjectNotFoundException("Subject with ID " + subjectId + " was not found.");
+			throw new ObjectNotFoundException(
+					"Subject with ID " + subjectId + " was not found.");
 		}
-		
+
 		return subj;
 	}
 
@@ -56,8 +56,10 @@ public class SubjectResource {
 	}
 
 	@RequestMapping(method = PATCH, path = "/{id}/assignees")
-	public void assignProfessors(@PathVariable("id") Long subjectId, @RequestBody SubjectAssignmentRequest request) {
-		subjectService.updateAssignees(subjectId, request.getAdded(), request.getRemoved());
+	public void assignProfessors(@PathVariable("id") Long subjectId,
+			@RequestBody SubjectAssignmentRequest request) {
+		subjectService.updateAssignees(subjectId, request.getAdded(),
+				request.getRemoved());
 	}
 
 	public static class SubjectAssignmentRequest {

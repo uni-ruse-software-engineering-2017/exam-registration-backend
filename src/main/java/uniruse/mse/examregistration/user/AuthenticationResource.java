@@ -29,7 +29,7 @@ public class AuthenticationResource {
 	 */
 	@RequestMapping(method = POST, path = "/sign-up")
 	public ResponseEntity<?> signUp(@RequestBody SignUpUser user) {
-		userService.create(user);
+		userService.signUp(user);
 
 		return new ResponseEntity<>(HttpStatus.CREATED);
 	}

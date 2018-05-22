@@ -26,13 +26,13 @@ public class SubjectService {
 	private UserService userService;
 
 	public Subject create(Subject subject) {
-		Subject example = new Subject();
+		final Subject example = new Subject();
 		example.setName(subject.getName());
 
-		Optional<Subject> existingSubject = subjectRepository.findOne(Example.of(example));
+		final Optional<Subject> existingSubject = subjectRepository.findOne(Example.of(example));
 
 		if (existingSubject.isPresent()) {
-			throw new ObjectAlreadyExistsException("Subject with username '" + subject.getName() + "' already exists");
+			throw new ObjectAlreadyExistsException("Subject with name '" + subject.getName() + "' already exists");
 		}
 
 		return subjectRepository.save(subject);
@@ -41,12 +41,12 @@ public class SubjectService {
 	public List<Subject> getSubjects() {
 		return subjectRepository.findAll(new Sort(Direction.ASC, "name"));
 	}
-	
+
 	public Subject getSubjectById(Long id) {
 		if(!subjectRepository.existsById(id)) {
 			return null;
 		};
-		
+
 		return subjectRepository.getOne(id);
 	}
 
@@ -55,17 +55,17 @@ public class SubjectService {
 	}
 
 	public void updateAssignees(Long subjectId, String[] added, String[] removed) {
-		Optional<Subject> subjectOptional = subjectRepository.findById(subjectId);
+		final Optional<Subject> subjectOptional = subjectRepository.findById(subjectId);
 
 		if (!subjectOptional.isPresent()) {
 			throw new ObjectNotFoundException("Subject with id '" + subjectId + "' is not found");
 		}
 
-		Subject subject = subjectOptional.get();
+		final Subject subject = subjectOptional.get();
 
 		if (added != null) {
-			for (String username : added) {
-				ApplicationUser professor = userService.getByUsername(username).get();
+			for (final String username : added) {
+				final ApplicationUser professor = userService.getByUsername(username).get();
 
 				if (professor.getRole().equals(UserRole.PROFESSOR)) {
 					subject.getProfessors().add(professor);
@@ -76,8 +76,8 @@ public class SubjectService {
 		}
 
 		if (removed != null) {
-			for (String username : removed) {
-				ApplicationUser professor = userService.getByUsername(username).get();
+			for (final String username : removed) {
+				final ApplicationUser professor = userService.getByUsername(username).get();
 
 				subject.getProfessors().remove(professor);
 			}

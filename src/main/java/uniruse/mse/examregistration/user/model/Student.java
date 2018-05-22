@@ -28,6 +28,7 @@ public class Student extends ApplicationUser {
 
 	public Student() {
 		super();
+		this.setRole(UserRole.STUDENT);
 	}
 
 	public Student(

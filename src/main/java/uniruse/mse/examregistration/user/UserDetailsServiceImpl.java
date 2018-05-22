@@ -12,26 +12,26 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 
-@Service
+@Component
 public class UserDetailsServiceImpl implements UserDetailsService {
 	@Autowired
 	private UserService userService;
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		Optional<ApplicationUser> userResult = this.userService.getByUsername(username);
+		final Optional<ApplicationUser> userResult = this.userService.getByUsername(username);
 
 		if (!userResult.isPresent()) {
 			throw new UsernameNotFoundException(username);
 		}
 
-		ApplicationUser appUser = userResult.get();
+		final ApplicationUser appUser = userResult.get();
 
-		User user = new User(
+		final User user = new User(
 			appUser.getUsername(),
 			appUser.getPassword(),
 			appUser.isActive(), true, true, true,
@@ -44,8 +44,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	}
 
 	private List<GrantedAuthority> getGrantedAuthorities(List<String> roles) {
-		List<GrantedAuthority> authorities = new ArrayList<>();
-		for (String privilege : roles) {
+		final List<GrantedAuthority> authorities = new ArrayList<>();
+		for (final String privilege : roles) {
 			authorities.add(new SimpleGrantedAuthority(privilege));
 		}
 		return authorities;
