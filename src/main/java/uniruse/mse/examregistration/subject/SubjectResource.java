@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import uniruse.mse.examregistration.ObjectNotFoundException;
+import uniruse.mse.examregistration.exception.ObjectNotFoundException;
 
 @RestController
 @RequestMapping("/subjects")

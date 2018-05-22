@@ -13,12 +13,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import uniruse.mse.examregistration.IllegalUsernameException;
-import uniruse.mse.examregistration.InvalidEmailAddressException;
-import uniruse.mse.examregistration.ObjectAlreadyExistsException;
-import uniruse.mse.examregistration.ObjectNotFoundException;
-import uniruse.mse.examregistration.OperationNotAllowedException;
-import uniruse.mse.examregistration.UserAlreadyActivatedException;
+import uniruse.mse.examregistration.exception.IllegalUsernameException;
+import uniruse.mse.examregistration.exception.InvalidEmailAddressException;
+import uniruse.mse.examregistration.exception.ObjectAlreadyExistsException;
+import uniruse.mse.examregistration.exception.ObjectNotFoundException;
+import uniruse.mse.examregistration.exception.OperationNotAllowedException;
+import uniruse.mse.examregistration.exception.UserAlreadyActivatedException;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.SignUpUser;

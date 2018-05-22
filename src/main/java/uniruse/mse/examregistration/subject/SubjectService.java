@@ -9,9 +9,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
-import uniruse.mse.examregistration.ObjectAlreadyExistsException;
-import uniruse.mse.examregistration.ObjectNotFoundException;
-import uniruse.mse.examregistration.OperationNotAllowedException;
+import uniruse.mse.examregistration.exception.ObjectAlreadyExistsException;
+import uniruse.mse.examregistration.exception.ObjectNotFoundException;
+import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.user.UserService;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.UserRole;
