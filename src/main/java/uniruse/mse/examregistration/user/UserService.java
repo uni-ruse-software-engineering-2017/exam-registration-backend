@@ -81,37 +81,6 @@ public class UserService {
 	}
 
 	@Transactional
-	public void create(SignUpUser user) {
-		final Optional<ApplicationUser> existingUser = this
-			.getByUsername(user.getUsername());
-
-		if (existingUser.isPresent()) {
-			throw new ObjectAlreadyExistsException("User with username '"
-					+ user.getUsername() + "' already exists");
-		}
-
-		final Student student = new Student();
-		student.setUsername(user.getUsername());
-		student.setPassword(encoder.encode(user.getPassword()));
-		student.setFullName("");
-		student.setRole(this.getRoleFromEmail(user.getUsername()));
-		student.setActive(false);
-
-		// extract faculty number from email address
-		student.setFacultyNumber(student.getUsername()
-			.substring(1, 7));
-
-		// TODO: get student data from external system
-		student.setStudyForm(StudyForm.FULL_TIME);
-		student.setSpecialty("Computer Science");
-		student.setGroupNumber(50);
-
-		userRepository.save(student);
-	}
-
-	// TODO: signUp() method
-
-	@Transactional
 	public void signUp(SignUpUser user) {
 		final ApplicationUser existingUser = this.getByUsername(user.getUsername()).orElse(null);
 
