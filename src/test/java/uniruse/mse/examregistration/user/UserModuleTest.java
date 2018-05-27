@@ -237,7 +237,7 @@ public class UserModuleTest extends BaseTest {
 			.get();
 
 		final String activationToken = userService
-			.generateActicationToken(testUser.getUsername());
+			.generateActivationToken(testUser.getUsername());
 
 		this.get("/activate/" + createdUser.getUsername() + "?token="
 				+ activationToken, null)

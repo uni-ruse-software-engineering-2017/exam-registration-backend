@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import uniruse.mse.examregistration.user.UserService;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.LoginUser;
+import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.UserRole;
 
 @RunWith(SpringRunner.class)
@@ -145,6 +146,28 @@ public abstract class BaseTest {
 			.content(jsonBody));
 	}
 
+	/**
+	 * Helper method for dispatching HTTP DELETE requests
+	 *
+	 * @param url
+	 *            - end point URI
+	 * @param jwt
+	 * 			  - JSON Web Token used for authentication
+	 * @return HTTP application/json response
+	 * @throws Exception
+	 */
+	protected ResultActions delete(String url, String jwt)
+			throws Exception {
+
+		return this.mockMvc.perform(
+			MockMvcRequestBuilders
+				.delete(url)
+				.header("Authorization", jwt != "" ? "Bearer " + jwt : "")
+				.accept(MediaType.APPLICATION_JSON)
+				.contentType(MediaType.APPLICATION_JSON)
+			);
+	}
+
 	protected String toJson(Object object) {
 		try {
 			final ObjectMapper mapper = new ObjectMapper();
@@ -171,11 +194,48 @@ public abstract class BaseTest {
 	protected ApplicationUser createActiveUser(String name, String password, UserRole role) {
 		final ApplicationUser user = createUser(name, password, role);
 
-		final String token = userService.generateActicationToken(name);
+		final String token = userService.generateActivationToken(name);
 
 		userService.activate(name, token);
 
 		return user;
+	}
+
+	protected Professor createActiveProfessor(String username, String password) {
+		final Professor prof = new Professor();
+		prof.setUsername(username);
+		prof.setPassword(password);
+		prof.setCabinet("405b");
+		prof.setFullName("prof. John Doe");
+		prof.setPhoneNumber("+359898989898");
+
+		final Professor createdProf = userService.createProfessor(prof);
+		final String token = userService.generateActivationToken(username);
+
+		userService.activate(username, token);
+
+		return createdProf;
+	}
+
+	/**
+	 * Utility method for authenticating with an account with the professor role.
+	 *
+	 * @return Pair of: (Professor, JWT token)
+	 * @throws Exception
+	 */
+	protected Pair<Professor, String> loginAsProfessor() throws Exception {
+		final String username = "j.doe@ami.uni-ruse.bg";
+		final String password = "12345678";
+		final Professor prof = this.createActiveProfessor(username, password);
+
+		final LoginUser credentials = new LoginUser() {{
+			setUsername(username);
+			setPassword(password);
+		}};
+
+		final String jwt = this.login(credentials);
+
+		return Pair.of(prof, jwt);
 	}
 
 	/**

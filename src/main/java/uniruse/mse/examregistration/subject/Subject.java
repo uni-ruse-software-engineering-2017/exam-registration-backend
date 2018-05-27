@@ -39,6 +39,13 @@ public class Subject {
 	)
 	private List<ApplicationUser> professors = new ArrayList<>();
 
+	public Subject() {}
+
+	public Subject(String name, String description) {
+		this.name = name;
+		this.description = description;
+	}
+
 	public Long getId() {
 		return id;
 	}

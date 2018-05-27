@@ -1,80 +1,202 @@
 package uniruse.mse.examregistration.exam;
 
-import java.util.Date;
-import java.util.List;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.Instant;
 
 import javax.transaction.Transactional;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
+import org.springframework.data.util.Pair;
 
 import uniruse.mse.examregistration.BaseTest;
-import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.subject.SubjectService;
-import uniruse.mse.examregistration.user.model.ApplicationUser;
-import uniruse.mse.examregistration.user.model.UserRole;
+import uniruse.mse.examregistration.user.model.Professor;
 
 public class ExamTests extends BaseTest {
-
-	@Autowired
-	private ExamRepository examRepository;
-
-	@Autowired
-	private ExamParticipationRequestRepository participationRepository;
+	private final static String ENDPOINT = "/exams";
 
 	@Autowired
 	private SubjectService subjectService;
 
+	@Autowired
+	private ExamService examService;
+
+	private Professor prof = null;
+	private String profJwt = "";
+
+	@Before
+	public void getProfessorData() throws Exception {
+		final Pair<Professor, String> profLoginResult = this.loginAsProfessor();
+		this.prof = profLoginResult.getFirst();
+		this.profJwt = profLoginResult.getSecond();
+	}
+
 	@Test
 	@Transactional
-	public void test() {
-		ApplicationUser professor = createUser("grigorova", "123456", UserRole.PROFESSOR);
-		Subject programming = createSubject("programming");
+	public void should_CreateNewExamDate() throws Exception {
+		final Subject maths = this.createSubject("Maths");
+		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
 
-		Exam exam = new Exam();
+		final NewExamModel model = new NewExamModel(
+			maths.getId(),
+			Instant.now().toEpochMilli(),
+			Instant.now().toEpochMilli() + 3600L * 1000,
+			"403a",
+			25
+		);
 
-		exam.setProfessor(professor);
-		exam.setSubject(programming);
-		exam.setHall("1.416");
-		exam.setMaxSeats(4);
-		exam.setStartTime(new Date());
-		exam.setEndTime(new Date());
+		final String jsonBody = this.toJson(model);
 
-		examRepository.save(exam);
+		this.post(ENDPOINT, jsonBody, profJwt)
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.hall").value("403a"))
+			.andExpect(jsonPath("$.maxSeats").value(25))
+			.andExpect(jsonPath("$.subject.id").value(maths.getId()))
+			.andExpect(jsonPath("$.subject.name").value(maths.getName()))
+			.andExpect(jsonPath("$.subject.description").hasJsonPath())
+			.andExpect(jsonPath("$.professor.username").value(this.prof.getUsername()))
+			.andExpect(jsonPath("$.professor.role").value(this.prof.getRole().name()));
+	}
 
-		ApplicationUser student = createUser("gosho", "123456", UserRole.STUDENT);
+	@Test
+	public void should_NotCreateExamDateIfProfessorDoesntHaveTheSubjectAssigned() throws Exception {
+		final Subject maths = this.createSubject("Maths");
 
-		ExamParticipationRequest request = new ExamParticipationRequest();
+		final NewExamModel model = new NewExamModel(
+			maths.getId(),
+			Instant.now().toEpochMilli(),
+			Instant.now().toEpochMilli() + 3600L * 1000,
+			"403a",
+			25
+		);
 
-		request.setExam(exam);
-		request.setStudent(student);
-		request.setStatus(ExamParticipationRequestStatus.PENDING);
+		final String jsonBody = this.toJson(model);
 
-		participationRepository.save(request);
+		this.post(ENDPOINT, jsonBody, profJwt)
+			.andExpect(status().isForbidden());
+	}
 
+	@Test
+	@Transactional
+	public void should_ListAllExamDates() throws Exception {
+		final Subject maths = this.createSubject("Maths");
+		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
 
-//		Exam example = new Exam();
-//		example.setHall("1.416");
+		final NewExamModel exam1 = new NewExamModel(
+			maths.getId(),
+			Instant.now().toEpochMilli(),
+			Instant.now().toEpochMilli() + 3600L * 1000,
+			"403a",
+			25
+		);
 
-//		Optional<Exam> findById = examRepository.findOne(Example.of(example));
-//
-//		List<ExamParticipationRequest> participationRequests = findById.get().getParticipationRequests();
-//
-//		System.out.println(participationRequests);
+		final NewExamModel exam2 = new NewExamModel(
+			maths.getId(),
+			Instant.now().toEpochMilli(),
+			Instant.now().toEpochMilli() + 3600L * 1000,
+			"501c",
+			15
+		);
 
-		ExamParticipationRequest example = new ExamParticipationRequest();
-		example.setExam(exam);
+		this.examService.create(exam1, prof);
+		this.examService.create(exam2, prof);
 
-		List<ExamParticipationRequest> findAll = participationRepository.findAll(Example.of(example));
+		// results are sorted by ID in descending order (latest records are shown first)
+		this.get(ENDPOINT, profJwt)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$").isArray())
+			.andExpect(jsonPath("$[0].subject.name").value("Maths"))
+			.andExpect(jsonPath("$[0].hall").value("501c"))
+			.andExpect(jsonPath("$[0].maxSeats").value(15))
+			.andExpect(jsonPath("$[1].subject.name").value("Maths"))
+			.andExpect(jsonPath("$[1].hall").value("403a"))
+			.andExpect(jsonPath("$[1].maxSeats").value(25));
+	}
 
-		System.out.println(findAll.size());
+	@Test
+	@Transactional
+	public void should_GetExamById() throws Exception {
+		final Subject maths = this.createSubject("Maths");
+		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
+
+		final NewExamModel exam1 = new NewExamModel(
+			maths.getId(),
+			Instant.now().toEpochMilli(),
+			Instant.now().toEpochMilli() + 3600L * 1000,
+			"403a",
+			25
+		);
+
+		final Exam createdExam = this.examService.create(exam1, prof);
+
+		this.get(ENDPOINT + "/" + createdExam.getId(), profJwt)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id").value(createdExam.getId()))
+			.andExpect(jsonPath("$.subject.name").value(createdExam.getSubject().getName()))
+			.andExpect(jsonPath("$.hall").value(createdExam.getHall()))
+			.andExpect(jsonPath("$.maxSeats").value(createdExam.getMaxSeats()));
+	}
+
+	@Test
+	@Transactional
+	public void should_UpdateExamDetails() throws Exception {
+		final Subject maths = this.createSubject("Maths");
+		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
+
+		final NewExamModel exam = new NewExamModel(
+			maths.getId(),
+			Instant.now().toEpochMilli(),
+			Instant.now().toEpochMilli() + 3600L * 1000,
+			"403a",
+			25
+		);
+
+		final Exam createdExam = this.examService.create(exam, prof);
+
+		final Exam examPatch = new Exam();
+		examPatch.setHall("101a");
+		examPatch.setMaxSeats(30);
+
+		final String httpBody = toJson(examPatch);
+
+		this.patch(ENDPOINT + "/" + createdExam.getId(), httpBody, profJwt)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id").value(createdExam.getId()))
+			.andExpect(jsonPath("$.subject.name").value(createdExam.getSubject().getName()))
+			.andExpect(jsonPath("$.hall").value(examPatch.getHall()))
+			.andExpect(jsonPath("$.maxSeats").value(examPatch.getMaxSeats()));
+	}
+
+	@Test
+	@Transactional
+	public void should_CancelExam() throws Exception {
+		final Subject maths = this.createSubject("Maths");
+		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
+
+		final NewExamModel exam = new NewExamModel(
+			maths.getId(),
+			Instant.now().toEpochMilli(),
+			Instant.now().toEpochMilli() + 3600L * 1000,
+			"403a",
+			25
+		);
+
+		final Exam createdExam = this.examService.create(exam, prof);
+
+		this.delete(ENDPOINT + "/" + createdExam.getId(), profJwt)
+			.andExpect(status().isNoContent());
+
+		this.get(ENDPOINT + "/" + createdExam.getId(), profJwt)
+			.andExpect(status().isNotFound());
 	}
 
 	private Subject createSubject(String name) {
-		Subject subject = new Subject();
-
+		final Subject subject = new Subject();
 		subject.setName(name);
 
 		subjectService.create(subject);

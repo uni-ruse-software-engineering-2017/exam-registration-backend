@@ -54,7 +54,7 @@ public class SubjectService {
 		subjectRepository.deleteById(id);
 	}
 
-	public void updateAssignees(Long subjectId, String[] added, String[] removed) {
+	public Subject updateAssignees(Long subjectId, String[] added, String[] removed) {
 		final Optional<Subject> subjectOptional = subjectRepository.findById(subjectId);
 
 		if (!subjectOptional.isPresent()) {
@@ -83,7 +83,7 @@ public class SubjectService {
 			}
 		}
 
-		subjectRepository.save(subject);
+		return subjectRepository.save(subject);
 	}
 
 }

@@ -195,7 +195,7 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public String generateActicationToken(String username) {
+	public String generateActivationToken(String username) {
 		final Optional<ApplicationUser> userOptional = getByUsername(username);
 
 		final ApplicationUser user = userOptional
