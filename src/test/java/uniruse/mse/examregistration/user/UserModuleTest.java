@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.ArrayList;
 
+import javax.transaction.Transactional;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
@@ -165,6 +167,7 @@ public class UserModuleTest extends BaseTest {
 	}
 
 	@Test
+	@Transactional
 	public void should_GetUserProfileForStudents() throws Exception {
 		final Pair<ApplicationUser, String> user = this.loginAsStudent();
 		final ApplicationUser userObj = user.getFirst();

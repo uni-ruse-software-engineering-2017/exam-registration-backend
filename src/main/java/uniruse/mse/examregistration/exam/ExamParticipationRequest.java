@@ -10,6 +10,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 
 @Entity
@@ -22,6 +24,7 @@ public class ExamParticipationRequest {
 
 	@ManyToOne
 	@JoinColumn(name = "exam_id")
+	@JsonIgnore
 	private Exam exam;
 
 	@ManyToOne

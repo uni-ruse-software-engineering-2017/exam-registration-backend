@@ -9,10 +9,13 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
 import uniruse.mse.examregistration.exception.ObjectNotFoundException;
+import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.subject.SubjectService;
 import uniruse.mse.examregistration.user.model.Professor;
+import uniruse.mse.examregistration.user.model.Student;
 
 @Service
 public class ExamService {
@@ -83,6 +86,38 @@ public class ExamService {
 		final Exam exam = this.getById(examId);
 
 		examRepository.delete(exam);
+	}
+
+	public void applyForExam(Student student, Long examId) {
+		// TODO: check exam date
+		final Exam exam = this.getById(examId);
+
+		if (exam == null) {
+			throw new ObjectNotFoundException(
+				"Exam with ID " + examId + " was not found."
+			);
+		}
+
+		// check if user has already applied for that exam
+		if (exam.getParticipationRequests()
+				.stream()
+				.filter(
+					(pr) -> pr.getStudent().getUsername() == student.getUsername())
+				.count() > 0
+		) {
+			throw new OperationNotAllowedException(
+				"Student " + student.getUsername() + " has already applied for this exam."
+			);
+		}
+
+		final ExamParticipationRequest epr = new ExamParticipationRequest();
+		epr.setExam(exam);
+		epr.setStatus(ExamParticipationRequestStatus.PENDING);
+		epr.setStudent(student);
+
+		exam.getParticipationRequests().add(epr);
+
+		examRepository.save(exam);
 	}
 
 	private boolean hasRightsToPublishExam(Professor prof, Subject subjectChosen) {

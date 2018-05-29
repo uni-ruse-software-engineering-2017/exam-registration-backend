@@ -15,6 +15,7 @@ import org.springframework.data.util.Pair;
 import uniruse.mse.examregistration.BaseTest;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.subject.SubjectService;
+import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.Professor;
 
 public class ExamTests extends BaseTest {
@@ -121,18 +122,7 @@ public class ExamTests extends BaseTest {
 	@Test
 	@Transactional
 	public void should_GetExamById() throws Exception {
-		final Subject maths = this.createSubject("Maths");
-		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
-
-		final NewExamModel exam1 = new NewExamModel(
-			maths.getId(),
-			Instant.now().toEpochMilli(),
-			Instant.now().toEpochMilli() + 3600L * 1000,
-			"403a",
-			25
-		);
-
-		final Exam createdExam = this.examService.create(exam1, prof);
+		final Exam createdExam = createTestExam();
 
 		this.get(ENDPOINT + "/" + createdExam.getId(), profJwt)
 			.andExpect(status().isOk())
@@ -145,18 +135,7 @@ public class ExamTests extends BaseTest {
 	@Test
 	@Transactional
 	public void should_UpdateExamDetails() throws Exception {
-		final Subject maths = this.createSubject("Maths");
-		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
-
-		final NewExamModel exam = new NewExamModel(
-			maths.getId(),
-			Instant.now().toEpochMilli(),
-			Instant.now().toEpochMilli() + 3600L * 1000,
-			"403a",
-			25
-		);
-
-		final Exam createdExam = this.examService.create(exam, prof);
+		final Exam createdExam = createTestExam();
 
 		final Exam examPatch = new Exam();
 		examPatch.setHall("101a");
@@ -175,6 +154,50 @@ public class ExamTests extends BaseTest {
 	@Test
 	@Transactional
 	public void should_CancelExam() throws Exception {
+		final Exam createdExam = createTestExam();
+
+		this.delete(ENDPOINT + "/" + createdExam.getId(), profJwt)
+			.andExpect(status().isNoContent());
+
+		this.get(ENDPOINT + "/" + createdExam.getId(), profJwt)
+			.andExpect(status().isNotFound());
+	}
+
+
+	@Test
+	@Transactional
+	public void should_ApplyForExamAsStudent() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
+
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	@Transactional
+	public void should_NotBeAbleToApplyForExamAsStudentIfAlreadyApplied() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
+
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
+			.andExpect(status().isOk());
+
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
+			.andExpect(status().isUnprocessableEntity());
+
+	}
+
+	private Subject createSubject(String name) {
+		final Subject subject = new Subject();
+		subject.setName(name);
+
+		subjectService.create(subject);
+
+		return subject;
+	}
+
+	private Exam createTestExam() {
 		final Subject maths = this.createSubject("Maths");
 		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
 
@@ -187,21 +210,7 @@ public class ExamTests extends BaseTest {
 		);
 
 		final Exam createdExam = this.examService.create(exam, prof);
-
-		this.delete(ENDPOINT + "/" + createdExam.getId(), profJwt)
-			.andExpect(status().isNoContent());
-
-		this.get(ENDPOINT + "/" + createdExam.getId(), profJwt)
-			.andExpect(status().isNotFound());
-	}
-
-	private Subject createSubject(String name) {
-		final Subject subject = new Subject();
-		subject.setName(name);
-
-		subjectService.create(subject);
-
-		return subject;
+		return createdExam;
 	}
 
 }

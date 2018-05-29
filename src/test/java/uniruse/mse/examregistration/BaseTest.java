@@ -38,6 +38,8 @@ import uniruse.mse.examregistration.user.UserService;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.LoginUser;
 import uniruse.mse.examregistration.user.model.Professor;
+import uniruse.mse.examregistration.user.model.Student;
+import uniruse.mse.examregistration.user.model.StudyForm;
 import uniruse.mse.examregistration.user.model.UserRole;
 
 @RunWith(SpringRunner.class)
@@ -201,6 +203,24 @@ public abstract class BaseTest {
 		return user;
 	}
 
+	protected Student createActiveStudent(String username, String password) {
+		final Student stud = new Student(
+			new ApplicationUser(
+				username, password, "Jane Doe", UserRole.STUDENT
+			),
+			StudyForm.FULL_TIME,
+			"CS",
+			50
+		);
+
+		final Student createdStudent = userService.createStudent(stud);
+		final String token = userService.generateActivationToken(username);
+
+		userService.activate(username, token);
+
+		return createdStudent;
+	}
+
 	protected Professor createActiveProfessor(String username, String password) {
 		final Professor prof = new Professor();
 		prof.setUsername(username);
@@ -241,13 +261,14 @@ public abstract class BaseTest {
 	/**
 	 * Utility method for authenticating with an account with the student role.
 	 *
-	 * @return Pair of: (User object, JWT token)
+	 * @return Pair of: (Student object, JWT token)
 	 * @throws Exception
 	 */
+	@Transactional
 	protected Pair<ApplicationUser, String> loginAsStudent() throws Exception {
 		final String username = "s136500@stud.uni-ruse.bg";
 		final String password = "12345678";
-		final ApplicationUser user = createActiveUser(username, password, UserRole.STUDENT);
+		final Student student = createActiveStudent(username, password);
 
 		final LoginUser credentials = new LoginUser() {{
 			setUsername(username);
@@ -256,7 +277,7 @@ public abstract class BaseTest {
 
 		final String jwt = this.login(credentials);
 
-		return Pair.of(user, jwt);
+		return Pair.of(student, jwt);
 	}
 
 	/**

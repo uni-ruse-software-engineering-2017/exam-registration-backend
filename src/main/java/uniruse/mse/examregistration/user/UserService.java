@@ -57,6 +57,28 @@ public class UserService {
 	}
 
 	@Transactional
+	public Student createStudent(Student stud) {
+		final Optional<ApplicationUser> existingUser = this.getByUsername(
+			stud.getUsername()
+		);
+
+		if (existingUser.isPresent()) {
+			throw new ObjectAlreadyExistsException("Student with username '"
+				+ stud.getUsername() + "' already exists");
+		}
+
+		final String password = stud.getPassword();
+		if (password == "" || password == null) {
+			throw new IllegalArgumentException("Student password must be provided.");
+		}
+
+		stud.setPassword(encoder.encode(password));
+		stud.setActive(false);
+
+		return userRepository.save(stud);
+	}
+
+	@Transactional
 	public Professor createProfessor(Professor professor) {
 		final Optional<ApplicationUser> existingUser = this.getByUsername(
 			professor.getUsername()
@@ -223,4 +245,5 @@ public class UserService {
 	private boolean isProfessor(String emailAddress) {
 		return PROFESSOR_EMAIL_REGEX.matcher(emailAddress).matches();
 	}
+
 }

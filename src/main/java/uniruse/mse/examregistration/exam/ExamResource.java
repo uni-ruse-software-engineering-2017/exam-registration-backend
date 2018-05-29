@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uniruse.mse.examregistration.exception.ObjectNotFoundException;
 import uniruse.mse.examregistration.user.UserService;
 import uniruse.mse.examregistration.user.model.Professor;
+import uniruse.mse.examregistration.user.model.Student;
 
 @RestController
 @RequestMapping("/exams")
@@ -119,6 +120,20 @@ public class ExamResource {
 		}
 
 		this.examService.cancel(examId);
+		return;
+	}
+
+	@RequestMapping(method = POST, path="/{examId}/apply")
+	@PreAuthorize("hasRole('STUDENT')")
+	public void applyForExam(@PathVariable Long examId, Authentication auth) {
+		final Student currentStudent = (Student) this.userService
+			.getByUsername(auth.getName())
+			.orElseThrow(() -> new ObjectNotFoundException(
+				"Student with username " + auth.getName() + " was not found."
+			));
+
+		this.examService.applyForExam(currentStudent, examId);
+
 		return;
 	}
 }

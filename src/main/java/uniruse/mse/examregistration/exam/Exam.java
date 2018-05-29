@@ -1,5 +1,6 @@
 package uniruse.mse.examregistration.exam;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -44,8 +45,8 @@ public class Exam {
 	@ManyToOne(fetch = FetchType.EAGER)
 	private ApplicationUser professor;
 
-	@OneToMany(mappedBy = "exam", cascade = CascadeType.REMOVE)
-	private List<ExamParticipationRequest> participationRequests;
+	@OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
+	private List<ExamParticipationRequest> participationRequests = new ArrayList<>();
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date createdOn;
