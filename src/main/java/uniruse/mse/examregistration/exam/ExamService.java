@@ -2,6 +2,7 @@ package uniruse.mse.examregistration.exam;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -107,7 +108,7 @@ public class ExamService {
 				.count() > 0
 		) {
 			throw new OperationNotAllowedException(
-				"Student " + student.getUsername() + " has already applied for this exam."
+				"You have already applied for this exam."
 			);
 		}
 
@@ -117,6 +118,42 @@ public class ExamService {
 		epr.setStudent(student);
 
 		exam.getParticipationRequests().add(epr);
+
+		examRepository.save(exam);
+	}
+
+	public void cancelExamApplication(Student student, Long examId) {
+		// TODO: check exam date
+		final Exam exam = this.getById(examId);
+
+		if (exam == null) {
+			throw new ObjectNotFoundException(
+				"Exam with ID " + examId + " was not found."
+			);
+		}
+
+		// check if user has already applied for that exam
+		if (exam.getParticipationRequests()
+				.stream()
+				.filter(
+					(pr) -> pr.getStudent().getUsername() == student.getUsername()
+				)
+				.count() == 0
+		) {
+			throw new OperationNotAllowedException(
+				"You haven't applied for this exam yet."
+			);
+		}
+
+		// remove the student's exam application
+		exam.setParticipationRequests(
+			exam.getParticipationRequests()
+				.stream()
+				.filter(
+					(pr) -> pr.getStudent().getUsername() != student.getUsername()
+				)
+				.collect(Collectors.toList())
+		);
 
 		examRepository.save(exam);
 	}

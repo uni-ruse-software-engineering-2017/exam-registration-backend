@@ -145,4 +145,16 @@ public class ExamResource {
 		this.examService.applyForExam(currentStudent, examId);
 		return;
 	}
+
+
+	@RequestMapping(method = POST, path="/{examId}/cancel")
+	@PreAuthorize("hasRole('STUDENT')")
+	public void cancelExamApplication(@PathVariable Long examId, Authentication auth) {
+		final Student currentStudent = (Student) this.userService
+			.getByUsername(auth.getName())
+			.get();
+
+		this.examService.cancelExamApplication(currentStudent, examId);
+		return;
+	}
 }

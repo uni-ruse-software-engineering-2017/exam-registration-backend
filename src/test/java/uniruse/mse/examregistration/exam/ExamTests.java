@@ -1,5 +1,6 @@
 package uniruse.mse.examregistration.exam;
 
+import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -276,6 +277,33 @@ public class ExamTests extends BaseTest {
 		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
 			.andExpect(status().isUnprocessableEntity());
 
+	}
+
+	@Test
+	@Transactional
+	public void should_CancelExamApplicationAsStudent() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
+
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
+			.andExpect(status().isOk());
+
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/cancel", "", studentLogin.getSecond())
+			.andExpect(status().isOk());
+
+		final Exam updatedExam = this.examService.getById(createdExam.getId());
+
+		assertEquals(0, updatedExam.getParticipationRequests().size());
+	}
+
+	@Test
+	@Transactional
+	public void should_FailToCancelExamApplicationAsStudentIfHaventAppliedBeforehand() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
+
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/cancel", "", studentLogin.getSecond())
+			.andExpect(status().isUnprocessableEntity());
 	}
 
 	private Subject createSubject(String name) {
