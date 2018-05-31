@@ -259,6 +259,27 @@ public abstract class BaseTest {
 	}
 
 	/**
+	 * Utility method for authenticating with a chosen account with the professor role.
+	 *
+	 * @param username
+	 * @param password
+	 * @return Pair of: (Professor, JWT token)
+	 * @throws Exception
+	 */
+	protected Pair<Professor, String> loginAsProfessor(String username, String password) throws Exception {
+		final Professor prof = this.createActiveProfessor(username, password);
+
+		final LoginUser credentials = new LoginUser() {{
+			setUsername(username);
+			setPassword(password);
+		}};
+
+		final String jwt = this.login(credentials);
+
+		return Pair.of(prof, jwt);
+	}
+
+	/**
 	 * Utility method for authenticating with an account with the student role.
 	 *
 	 * @return Pair of: (Student object, JWT token)

@@ -13,10 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 
 import uniruse.mse.examregistration.BaseTest;
+import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
+import uniruse.mse.examregistration.exam.model.NewExamModel;
+import uniruse.mse.examregistration.exam.model.StudentExamParticipationStatusModel;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.subject.SubjectService;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.Professor;
+import uniruse.mse.examregistration.user.model.Student;
 
 public class ExamTests extends BaseTest {
 	private final static String ENDPOINT = "/exams";
@@ -134,6 +138,13 @@ public class ExamTests extends BaseTest {
 
 	@Test
 	@Transactional
+	public void should_Return404WhenTryingToGetNonExistingExamById() throws Exception {
+		this.get(ENDPOINT + "/" + 42, profJwt)
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	@Transactional
 	public void should_UpdateExamDetails() throws Exception {
 		final Exam createdExam = createTestExam();
 
@@ -150,6 +161,85 @@ public class ExamTests extends BaseTest {
 			.andExpect(jsonPath("$.hall").value(examPatch.getHall()))
 			.andExpect(jsonPath("$.maxSeats").value(examPatch.getMaxSeats()));
 	}
+
+	@Test
+	@Transactional
+	public void should_UpdateStudentParticipationRequestStatusToApproved() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
+
+		examService.applyForExam(student, createdExam.getId());
+
+		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
+			ExamParticipationRequestStatus.APPROVED
+		);
+
+		final String httpBody = toJson(status);
+
+		this.patch(ENDPOINT + "/" + createdExam.getId() + "/student/" + student.getId(), httpBody, profJwt)
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	@Transactional
+	public void should_UpdateStudentParticipationRequestStatusToRejected() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
+
+		examService.applyForExam(student, createdExam.getId());
+
+		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
+			ExamParticipationRequestStatus.REJECTED
+		);
+
+		final String httpBody = toJson(status);
+
+		this.patch(ENDPOINT + "/" + createdExam.getId() + "/student/" + student.getId(), httpBody, profJwt)
+			.andExpect(status().isOk());
+	}
+
+
+	@Test
+	@Transactional
+	public void should_NotUpdateStudentParticipationRequestStatusForExamPublishedByOtherProfessor() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
+
+		examService.applyForExam(student, createdExam.getId());
+
+		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
+			ExamParticipationRequestStatus.REJECTED
+		);
+
+		final String httpBody = toJson(status);
+
+		final Pair<Professor, String> otherProfessor = this.loginAsProfessor("p.petrov@ami.uni-ruse.bg", "12345678");
+
+		this.patch(ENDPOINT + "/" + createdExam.getId() + "/student/" + student.getId(), httpBody, otherProfessor.getSecond())
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@Transactional
+	public void should_NotUpdateStudentParticipationRequestStatusWhenTryingToSetTheSameStatus() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
+
+		examService.applyForExam(student, createdExam.getId());
+
+		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
+			ExamParticipationRequestStatus.REJECTED
+		);
+
+		final String httpBody = toJson(status);
+
+		this.patch(ENDPOINT + "/" + createdExam.getId() + "/student/" + student.getId(), httpBody, profJwt)
+			.andExpect(status().isOk());
+
+		this.patch(ENDPOINT + "/" + createdExam.getId() + "/student/" + student.getId(), httpBody, profJwt)
+			.andExpect(status().isUnprocessableEntity());
+	}
+
 
 	@Test
 	@Transactional

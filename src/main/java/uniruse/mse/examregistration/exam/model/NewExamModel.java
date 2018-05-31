@@ -1,4 +1,4 @@
-package uniruse.mse.examregistration.exam;
+package uniruse.mse.examregistration.exam.model;
 
 public class NewExamModel {
 	private Long subjectId;

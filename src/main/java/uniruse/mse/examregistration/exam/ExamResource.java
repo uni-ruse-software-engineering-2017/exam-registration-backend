@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import uniruse.mse.examregistration.exam.model.NewExamModel;
+import uniruse.mse.examregistration.exam.model.StudentExamParticipationStatusModel;
 import uniruse.mse.examregistration.exception.ObjectNotFoundException;
 import uniruse.mse.examregistration.user.UserService;
 import uniruse.mse.examregistration.user.model.Professor;
@@ -62,9 +64,7 @@ public class ExamResource {
 	public Exam createExam(@RequestBody NewExamModel examData, Authentication auth) {
 		final Professor currentProf = (Professor) this.userService
 			.getByUsername(auth.getName())
-			.orElseThrow(() -> new ObjectNotFoundException(
-				"Professor with username " + auth.getName() + " was not found.")
-			);
+			.get();
 
 		return this.examService.create(examData, currentProf);
 	}
@@ -74,9 +74,7 @@ public class ExamResource {
 	public Exam updateExam(@RequestBody Exam examData, Authentication auth, @PathVariable Long examId) {
 		final Professor currentProf = (Professor) this.userService
 			.getByUsername(auth.getName())
-			.orElseThrow(() -> new ObjectNotFoundException(
-				"Professor with username " + auth.getName() + " was not found."
-			));
+			.get();
 
 		final Exam exam = this.examService.getById(examId);
 
@@ -101,9 +99,7 @@ public class ExamResource {
 	public void deleteExam(@PathVariable Long examId, Authentication auth) {
 		final Professor currentProf = (Professor) this.userService
 			.getByUsername(auth.getName())
-			.orElseThrow(() -> new ObjectNotFoundException(
-				"Professor with username " + auth.getName() + " was not found."
-			));
+			.get();
 
 		final Exam exam = this.examService.getById(examId);
 
@@ -123,17 +119,30 @@ public class ExamResource {
 		return;
 	}
 
+	@RequestMapping(method = PATCH, path="/{examId}/student/{studentId}")
+	@ResponseBody
+	@PreAuthorize("hasRole('PROFESSOR')")
+	public Exam applyForExam(
+		@PathVariable Long examId,
+		@PathVariable Long studentId,
+		Authentication auth,
+		@RequestBody StudentExamParticipationStatusModel model
+	) {
+		final Professor currentProf = (Professor) this.userService
+			.getByUsername(auth.getName())
+			.get();
+
+		return this.examService.changeStudentParticipationStatus(studentId, examId, model.getStatus(), currentProf);
+	}
+
 	@RequestMapping(method = POST, path="/{examId}/apply")
 	@PreAuthorize("hasRole('STUDENT')")
 	public void applyForExam(@PathVariable Long examId, Authentication auth) {
 		final Student currentStudent = (Student) this.userService
 			.getByUsername(auth.getName())
-			.orElseThrow(() -> new ObjectNotFoundException(
-				"Student with username " + auth.getName() + " was not found."
-			));
+			.get();
 
 		this.examService.applyForExam(currentStudent, examId);
-
 		return;
 	}
 }

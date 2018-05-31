@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
+import uniruse.mse.examregistration.exam.model.NewExamModel;
 import uniruse.mse.examregistration.exception.ObjectNotFoundException;
 import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.subject.Subject;
@@ -118,6 +119,37 @@ public class ExamService {
 		exam.getParticipationRequests().add(epr);
 
 		examRepository.save(exam);
+	}
+
+	public Exam changeStudentParticipationStatus(Long studentId, Long examId, ExamParticipationRequestStatus status, Professor prof) {
+		final Exam exam = this.getById(examId);
+
+		if (exam == null) {
+			throw new ObjectNotFoundException(
+				"Exam with ID " + examId + " was not found."
+			);
+		}
+
+		if (exam.getProfessor().getUsername() != prof.getUsername()) {
+			throw new AccessDeniedException(
+				"Exam with ID " + examId + " was not published by you."
+			);
+		}
+
+		final ExamParticipationRequest participationRequest = exam.getParticipationRequests()
+			.stream()
+			.filter(pr -> pr.getStudent().getId() == studentId)
+			.findFirst()
+			.orElseThrow(
+				() -> new OperationNotAllowedException("The selected student has not applied for this exam yet")
+			);
+
+		if (participationRequest.getStatus() != status) {
+			participationRequest.setStatus(status);
+			return examRepository.save(exam);
+		} else {
+			throw new OperationNotAllowedException("Student participation status is already set to " + status.name() + ".");
+		}
 	}
 
 	private boolean hasRightsToPublishExam(Professor prof, Subject subjectChosen) {
