@@ -1,5 +1,7 @@
 # Exam Registration System for Students (back-end)
 
+[![Build Status](https://travis-ci.org/uni-ruse-software-engineering-2017/exam-registration-backend.svg?branch=master)](https://travis-ci.org/uni-ruse-software-engineering-2017/exam-registration-backend)
+
 This is a [Spring Boot](https://projects.spring.io/spring-boot/) project which exposes a RESTful API.
 
 ## Dependencies
