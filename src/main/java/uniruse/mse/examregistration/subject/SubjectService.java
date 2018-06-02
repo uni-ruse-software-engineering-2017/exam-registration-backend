@@ -53,6 +53,22 @@ public class SubjectService {
 	public void deleteSubject(Long id ) {
 		subjectRepository.deleteById(id);
 	}
+	
+	public Subject update(Long subjectId, Subject subjectData) {
+		Subject subjFound = subjectRepository.findById(subjectId).orElseThrow(
+			() -> new ObjectNotFoundException("Subject was not found.")
+		);
+		
+		if (subjectData.getName() != null) {
+			subjFound.setName(subjectData.getName());			
+		}
+		
+		if (subjectData.getDescription() != null) {
+			subjFound.setDescription(subjectData.getDescription());			
+		}
+
+		return subjectRepository.save(subjFound);
+	}
 
 	public Subject updateAssignees(Long subjectId, String[] added, String[] removed) {
 		final Optional<Subject> subjectOptional = subjectRepository.findById(subjectId);
