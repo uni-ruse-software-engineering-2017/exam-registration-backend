@@ -5,17 +5,16 @@ public class RuStudentData {
 	private String facultyNumber;
 
 	private String fullName;
-	
+
 	private String specialty;
-	
-	private Integer groupNumber;
+
+	private String groupNumber;
 
 	private Integer studyForm;
-	
+
 	public RuStudentData() {}
-	
-	public RuStudentData(String facultyNumber, String fullName, String specialty, Integer groupNumber,
-			Integer studyForm) {
+
+	public RuStudentData(String facultyNumber, String fullName, String specialty, String groupNumber, Integer studyForm) {
 		super();
 		this.facultyNumber = facultyNumber;
 		this.fullName = fullName;
@@ -48,11 +47,11 @@ public class RuStudentData {
 		this.specialty = specialty;
 	}
 
-	public Integer getGroupNumber() {
+	public String getGroupNumber() {
 		return groupNumber;
 	}
 
-	public void setGroupNumber(Integer groupNumber) {
+	public void setGroupNumber(String groupNumber) {
 		this.groupNumber = groupNumber;
 	}
 

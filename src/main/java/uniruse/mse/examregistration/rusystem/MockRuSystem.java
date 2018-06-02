@@ -20,20 +20,20 @@ public class MockRuSystem implements RuStudentSystem {
 
 	public MockRuSystem() {
 	    try {
-	    	File inputF = new ClassPathResource("students.csv").getFile();
-	    	InputStream inputFS = new FileInputStream(inputF);
-	    	BufferedReader br = new BufferedReader(new InputStreamReader(inputFS));
+	    	final File inputF = new ClassPathResource("students.csv").getFile();
+	    	final InputStream inputFS = new FileInputStream(inputF);
+	    	final BufferedReader br = new BufferedReader(new InputStreamReader(inputFS));
 	    	// skip the header of the csv
 	    	students = br.lines().skip(1).map(mapToItem).collect(Collectors.toList());
 	    	br.close();
-	    } catch (IOException e) { 
+	    } catch (final IOException e) {
 	    	students = new ArrayList<>();
 	    }
 	}
-	
+
 	@Override
 	public RuStudentData findByFacultyNumber(String fn) {
-		for (RuStudentData student : students) {
+		for (final RuStudentData student : students) {
 			if (student.getFacultyNumber().equals(fn)) {
 				return student;
 			}
@@ -48,7 +48,7 @@ public class MockRuSystem implements RuStudentSystem {
 
 	@Override
 	public boolean exists(String fn) {
-		for (RuStudentData student : students) {
+		for (final RuStudentData student : students) {
 			if (student.getFacultyNumber().equals(fn)) {
 				return true;
 			}
@@ -56,20 +56,16 @@ public class MockRuSystem implements RuStudentSystem {
 		return false;
 	}
 
-	private Function<String, RuStudentData> mapToItem = (line) -> {
-		  String[] p = line.split(";");// a CSV has comma separated lines
-		  RuStudentData item = new RuStudentData();
-		  item.setFacultyNumber(p[0]);
-		  
-		  item.setFullName(p[1]);  
-		  
-		  item.setStudyForm(Integer.decode(p[2]));
-		  
-		  item.setSpecialty(p[3]);
-		  
-		  item.setGroupNumber(Integer.decode(p[4]));
-		    
-		  //more initialization goes here
-		  return item;
+	private final Function<String, RuStudentData> mapToItem = (line) -> {
+		  final String[] p = line.split(";");
+		  final RuStudentData stud = new RuStudentData();
+
+		  stud.setFacultyNumber(p[0]);
+		  stud.setFullName(p[1]);
+		  stud.setStudyForm(Integer.decode(p[2]));
+		  stud.setSpecialty(p[3]);
+		  stud.setGroupNumber(p[4]);
+
+		  return stud;
 	};
 }
