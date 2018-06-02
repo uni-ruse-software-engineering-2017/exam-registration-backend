@@ -9,10 +9,10 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,8 +26,8 @@ public class SubjectResource {
 	private SubjectService subjectService;
 
 	@RequestMapping(method = POST)
-	@ResponseBody()
 	@ResponseStatus(code = HttpStatus.CREATED)
+	@PreAuthorize("hasRole('ADMIN')")
 	public Subject create(@RequestBody Subject subject) {
 		return subjectService.create(subject);
 	}
@@ -51,8 +51,18 @@ public class SubjectResource {
 
 	@RequestMapping(method = DELETE, path = "/{subjectId}")
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
+	@PreAuthorize("hasRole('ADMIN')")
 	public void deleteSubject(@PathVariable Long subjectId) {
 		subjectService.deleteSubject(subjectId);
+	}
+	
+	@RequestMapping(method = PATCH, path = "/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public Subject editSubject(
+		@PathVariable("id") Long subjectId,
+		@RequestBody Subject subj
+	) {
+		return subjectService.update(subjectId, subj);
 	}
 
 	@RequestMapping(method = PATCH, path = "/{id}/assignees")

@@ -21,6 +21,9 @@ public class SubjectTests extends BaseTest {
 
 	@Autowired
 	private SubjectRepository subjectRepository;
+	
+	@Autowired
+	private SubjectService subjectService;
 
 	/**
 	 * Gets administrator JWT for authentication.
@@ -156,5 +159,46 @@ public class SubjectTests extends BaseTest {
 			.andExpect(MockMvcResultMatchers.status()
 			.isNotFound());
 	}
+	
+	@Test
+	public void should_EditSubject() throws Exception {
+		Subject testSubj = new Subject("Informatics", "This is a test subject.");
+		
+		Subject createdSubject = this.subjectService.create(testSubj);
+		
+		Subject changes = new Subject("Maths", "Calculus and linear algebra.");
+		
+		this.patch("/subjects/" + createdSubject.getId(), this.toJson(changes), adminJwt)
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(jsonPath("$.name").value(changes.getName()))
+			.andExpect(jsonPath("$.description").value(changes.getDescription()));
+	}
 
+	@Test
+	public void should_EditSubjectOnlyName() throws Exception {
+		Subject testSubj = new Subject("Informatics", "This is a test subject.");
+		
+		Subject createdSubject = this.subjectService.create(testSubj);
+		
+		Subject changes = new Subject("Maths", null);
+		
+		this.patch("/subjects/" + createdSubject.getId(), this.toJson(changes), adminJwt)
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(jsonPath("$.name").value(changes.getName()))
+			.andExpect(jsonPath("$.description").value(createdSubject.getDescription()));
+	}
+
+	@Test
+	public void should_EditSubjectOnlyDescription() throws Exception {
+		Subject testSubj = new Subject("Informatics", "This is a test subject.");
+		
+		Subject createdSubject = this.subjectService.create(testSubj);
+		
+		Subject changes = new Subject(null, "test");
+		
+		this.patch("/subjects/" + createdSubject.getId(), this.toJson(changes), adminJwt)
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(jsonPath("$.name").value(createdSubject.getName()))
+			.andExpect(jsonPath("$.description").value(changes.getDescription()));
+	}
 }
