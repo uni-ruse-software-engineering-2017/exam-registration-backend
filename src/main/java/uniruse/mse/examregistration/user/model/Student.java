@@ -24,7 +24,7 @@ public class Student extends ApplicationUser {
 
 	private String specialty;
 
-	private Integer groupNumber;
+	private String groupNumber;
 
 	public Student() {
 		super();
@@ -35,7 +35,7 @@ public class Student extends ApplicationUser {
 		ApplicationUser userData,
 		StudyForm studyForm,
 		String specialty,
-		Integer groupNumber
+		String groupNumber
 	) {
 
 		super(
@@ -82,15 +82,11 @@ public class Student extends ApplicationUser {
 		this.specialty = specialty;
 	}
 
-	public Integer getGroupNumber() {
+	public String getGroupNumber() {
 		return groupNumber;
 	}
 
-	public void setGroupNumber(Integer groupNumber) {
-		if (groupNumber == null || groupNumber < 1) {
-			throw new IllegalArgumentException("Group numbers must be greater than 0.");
-		}
-
+	public void setGroupNumber(String groupNumber) {
 		this.groupNumber = groupNumber;
 	}
 }

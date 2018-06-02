@@ -210,7 +210,7 @@ public abstract class BaseTest {
 			),
 			StudyForm.FULL_TIME,
 			"CS",
-			50
+			"50A"
 		);
 
 		final Student createdStudent = userService.createStudent(stud);

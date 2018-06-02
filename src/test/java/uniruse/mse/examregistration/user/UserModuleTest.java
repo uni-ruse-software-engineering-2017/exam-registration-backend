@@ -76,7 +76,7 @@ public class UserModuleTest extends BaseTest {
 
 	@Test
 	public void should_SignUpNewStudent() throws Exception {
-		final String username = "s136510@stud.uni-ruse.bg";
+		final String username = "s146469@stud.uni-ruse.bg";
 		final String password = "secret_pass";
 
 		final SignUpUser newUserData = new SignUpUser() {

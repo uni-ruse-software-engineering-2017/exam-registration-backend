@@ -19,6 +19,8 @@ import uniruse.mse.examregistration.exception.ObjectAlreadyExistsException;
 import uniruse.mse.examregistration.exception.ObjectNotFoundException;
 import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.exception.UserAlreadyActivatedException;
+import uniruse.mse.examregistration.rusystem.RuStudentData;
+import uniruse.mse.examregistration.rusystem.RuStudentSystem;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.SignUpUser;
@@ -40,6 +42,9 @@ public class UserService {
 	@Autowired
 	private PasswordEncoder encoder;
 
+	@Autowired
+	private RuStudentSystem studentSystem;
+	
 	@Transactional
 	public ApplicationUser create(ApplicationUser user) {
 		final Optional<ApplicationUser> existingUser = this
@@ -107,6 +112,13 @@ public class UserService {
 		final ApplicationUser existingUser = this.getByUsername(user.getUsername()).orElse(null);
 
 		if (isStudent(user.getUsername())) {
+			final String fn = user.getUsername().substring(1, 7);
+
+			if (!studentSystem.exists(fn)) {
+				throw new ObjectNotFoundException("Student with FN '"
+						+ fn + "' does not exist in our database.");
+			}
+
 			if (existingUser != null) {
 				throw new ObjectAlreadyExistsException("Student with username '"
 						+ user.getUsername() + "' already exists");
@@ -116,18 +128,17 @@ public class UserService {
 			final Student student = new Student();
 			student.setUsername(user.getUsername());
 			student.setPassword(encoder.encode(user.getPassword()));
-			student.setFullName("");
 			student.setRole(this.getRoleFromEmail(user.getUsername()));
 			student.setActive(false);
 
 			// extract faculty number from email address
-			student.setFacultyNumber(student.getUsername()
-				.substring(1, 7));
+			student.setFacultyNumber(fn);
 
-			// TODO: get student data from external system
-			student.setStudyForm(StudyForm.FULL_TIME);
-			student.setSpecialty("Computer Science");
-			student.setGroupNumber(50);
+			RuStudentData studentData = studentSystem.findByFacultyNumber(fn);
+			student.setFullName(studentData.getFullName());
+			student.setStudyForm(getStudyForm(studentData.getStudyForm()));
+			student.setSpecialty(studentData.getSpecialty());
+			student.setGroupNumber(studentData.getGroupNumber());
 			userRepository.save(student);
 			return;
 		} else if (isProfessor(user.getUsername())) {
@@ -244,6 +255,16 @@ public class UserService {
 
 	private boolean isProfessor(String emailAddress) {
 		return PROFESSOR_EMAIL_REGEX.matcher(emailAddress).matches();
+	}
+	
+	private StudyForm getStudyForm(int n) {
+		if (n == 1) {
+			return StudyForm.FULL_TIME;
+		} else if (n == 2) {
+			return StudyForm.PART_TIME;
+		} else {
+			return StudyForm.REMOTE;
+		}
 	}
 
 }
