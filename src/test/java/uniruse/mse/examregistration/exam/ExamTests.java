@@ -60,8 +60,8 @@ public class ExamTests extends BaseTest {
 
 		this.post(ENDPOINT, jsonBody, profJwt)
 			.andExpect(status().isCreated())
-			.andExpect(jsonPath("$.hall").value("403a"))
-			.andExpect(jsonPath("$.maxSeats").value(25))
+			.andExpect(jsonPath("$.hall").value(model.getHall()))
+			.andExpect(jsonPath("$.maxSeats").value(model.getMaxSeats()))
 			.andExpect(jsonPath("$.subject.id").value(maths.getId()))
 			.andExpect(jsonPath("$.subject.name").value(maths.getName()))
 			.andExpect(jsonPath("$.subject.description").hasJsonPath())
