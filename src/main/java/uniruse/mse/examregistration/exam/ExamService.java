@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
 import uniruse.mse.examregistration.exam.model.NewExamModel;
+import uniruse.mse.examregistration.exam.model.StudentExamParticipationStatusModel;
 import uniruse.mse.examregistration.exception.ObjectNotFoundException;
 import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.subject.Subject;
@@ -158,7 +159,7 @@ public class ExamService {
 		examRepository.save(exam);
 	}
 
-	public Exam changeStudentParticipationStatus(Long studentId, Long examId, ExamParticipationRequestStatus status, Professor prof) {
+	public Exam changeStudentParticipationStatus(Long studentId, Long examId, StudentExamParticipationStatusModel statusChange, Professor prof) {
 		final Exam exam = this.getById(examId);
 
 		if (exam == null) {
@@ -181,11 +182,21 @@ public class ExamService {
 				() -> new OperationNotAllowedException("The selected student has not applied for this exam yet")
 			);
 
-		if (participationRequest.getStatus() != status) {
-			participationRequest.setStatus(status);
+		if (participationRequest.getStatus() != statusChange.getStatus()) {
+			participationRequest.setStatus(statusChange.getStatus());
+			
+			if (statusChange.getStatus() == ExamParticipationRequestStatus.REJECTED) {
+				participationRequest.setReason(statusChange.getReason());
+				if (statusChange.getReason() == null || statusChange.getReason().equals("")) {
+					throw new OperationNotAllowedException("You must provide a reason for the rejection");
+				}
+			}
+
 			return examRepository.save(exam);
 		} else {
-			throw new OperationNotAllowedException("Student participation status is already set to " + status.name() + ".");
+			throw new OperationNotAllowedException(
+				"Student participation status is already set to " + statusChange.getStatus().name() + "."
+			);
 		}
 	}
 

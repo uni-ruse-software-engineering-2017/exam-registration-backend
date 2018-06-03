@@ -33,6 +33,24 @@ public class ExamParticipationRequest {
 
 	@Enumerated(EnumType.STRING)
 	private ExamParticipationRequestStatus status;
+	
+	private String reason;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
 
 	public Exam getExam() {
 		return exam;

@@ -132,7 +132,7 @@ public class ExamResource {
 			.getByUsername(auth.getName())
 			.get();
 
-		return this.examService.changeStudentParticipationStatus(studentId, examId, model.getStatus(), currentProf);
+		return this.examService.changeStudentParticipationStatus(studentId, examId, model, currentProf);
 	}
 
 	@RequestMapping(method = POST, path="/{examId}/apply")
