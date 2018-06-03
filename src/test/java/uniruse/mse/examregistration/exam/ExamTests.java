@@ -190,7 +190,7 @@ public class ExamTests extends BaseTest {
 		examService.applyForExam(student, createdExam.getId());
 
 		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
-			ExamParticipationRequestStatus.REJECTED
+			ExamParticipationRequestStatus.REJECTED, "No coursework provided!"
 		);
 
 		final String httpBody = toJson(status);
@@ -199,6 +199,23 @@ public class ExamTests extends BaseTest {
 			.andExpect(status().isOk());
 	}
 
+	@Test
+	@Transactional
+	public void should_NotRejectStudentWithoutProvidingAReason() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
+
+		examService.applyForExam(student, createdExam.getId());
+
+		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
+			ExamParticipationRequestStatus.REJECTED
+		);
+
+		final String httpBody = toJson(status);
+
+		this.patch(ENDPOINT + "/" + createdExam.getId() + "/student/" + student.getId(), httpBody, profJwt)
+			.andExpect(status().isUnprocessableEntity());
+	}
 
 	@Test
 	@Transactional
@@ -229,7 +246,7 @@ public class ExamTests extends BaseTest {
 		examService.applyForExam(student, createdExam.getId());
 
 		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
-			ExamParticipationRequestStatus.REJECTED
+			ExamParticipationRequestStatus.APPROVED
 		);
 
 		final String httpBody = toJson(status);
