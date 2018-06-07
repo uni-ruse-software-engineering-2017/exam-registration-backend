@@ -1,12 +1,23 @@
 package uniruse.mse.examregistration.exam;
 
+import static org.springframework.data.jpa.domain.Specification.where;
+import static uniruse.mse.examregistration.exam.ExamSpecifications.hasNotFinished;
+import static uniruse.mse.examregistration.exam.ExamSpecifications.startsOn;
+import static uniruse.mse.examregistration.exam.ExamSpecifications.withProfessorId;
+import static uniruse.mse.examregistration.exam.ExamSpecifications.withSubjectId;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +40,30 @@ public class ExamService {
 	private SubjectService subjectService;
 
 	public List<Exam> getAll() {
-		return this.examRepository.findAll(new Sort(Direction.DESC, "id"));
+		return this.examRepository.findAll(
+			hasNotFinished(), new Sort(Direction.ASC, "startTime")
+		);
+	}
+
+	@Transactional
+	public List<Exam> getAll(Long subjectId, Date date, Long professorId) {
+		Specification<Exam> criteria = where(hasNotFinished());
+
+		if (subjectId != null && subjectId > 0) {
+			criteria = criteria.and(withSubjectId(subjectId));
+		}
+
+		if (professorId != null && professorId > 0) {
+			criteria = criteria.and(withProfessorId(professorId));
+		}
+
+		if (date != null) {
+			criteria = criteria.and(startsOn(date));
+		}
+
+		return this.examRepository.findAll(
+			criteria, new Sort(Direction.ASC, "startTime")
+		);
 	}
 
 	public Exam getById(Long examId) {
@@ -184,7 +218,7 @@ public class ExamService {
 
 		if (participationRequest.getStatus() != statusChange.getStatus()) {
 			participationRequest.setStatus(statusChange.getStatus());
-			
+
 			if (statusChange.getStatus() == ExamParticipationRequestStatus.REJECTED) {
 				participationRequest.setReason(statusChange.getReason());
 				if (statusChange.getReason() == null || statusChange.getReason().equals("")) {
@@ -200,11 +234,25 @@ public class ExamService {
 		}
 	}
 
+	private boolean hasExamFinished(Exam exam) {
+		final LocalDateTime examFinishesAt = toLocalDateTime(exam.getEndTime());
+
+		if (examFinishesAt.isBefore(LocalDateTime.now())) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean hasRightsToPublishExam(Professor prof, Subject subjectChosen) {
 		if (prof == null || subjectChosen == null) {
 			return false;
 		}
 
 		return subjectChosen.getProfessors().contains(prof);
+	}
+
+	private LocalDateTime toLocalDateTime(Date date) {
+		return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 	}
 }

@@ -89,39 +89,72 @@ public class ExamTests extends BaseTest {
 
 	@Test
 	@Transactional
-	public void should_ListAllExamDates() throws Exception {
+	public void should_ListFilterExamDatesBySubject() throws Exception {
 		final Subject maths = this.createSubject("Maths");
+		final Subject informatics = this.createSubject("Informatics");
 		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
+		subjectService.updateAssignees(informatics.getId(), new String[]{ prof.getUsername() }, null);
 
-		final NewExamModel exam1 = new NewExamModel(
+		final NewExamModel mathsExam = new NewExamModel(
 			maths.getId(),
-			Instant.now().toEpochMilli(),
-			Instant.now().toEpochMilli() + 3600L * 1000,
+			1599487245000L, // Monday, 7 September 2020 14:00:45
+			1599494445000L, // Monday, 7 September 2020 16:00:45
 			"403a",
 			25
 		);
 
-		final NewExamModel exam2 = new NewExamModel(
-			maths.getId(),
-			Instant.now().toEpochMilli(),
-			Instant.now().toEpochMilli() + 3600L * 1000,
+		final NewExamModel informaticsExam = new NewExamModel(
+			informatics.getId(),
+			1594116045000L, // Sunday, 7 June 2020 10:00:45
+			1594126845000L, // Sunday, 7 June 2020 13:00:45
 			"501c",
 			15
 		);
 
-		this.examService.create(exam1, prof);
-		this.examService.create(exam2, prof);
+		this.examService.create(mathsExam, prof);
+		this.examService.create(informaticsExam, prof);
 
-		// results are sorted by ID in descending order (latest records are shown first)
-		this.get(ENDPOINT, profJwt)
+		this.get(ENDPOINT + "?subjectId=" + informatics.getId() , profJwt)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$").isArray())
-			.andExpect(jsonPath("$[0].subject.name").value("Maths"))
-			.andExpect(jsonPath("$[0].hall").value("501c"))
-			.andExpect(jsonPath("$[0].maxSeats").value(15))
-			.andExpect(jsonPath("$[1].subject.name").value("Maths"))
-			.andExpect(jsonPath("$[1].hall").value("403a"))
-			.andExpect(jsonPath("$[1].maxSeats").value(25));
+			.andExpect(jsonPath("$[0].subject.name").value(informatics.getName()))
+			.andExpect(jsonPath("$[0].hall").value(informaticsExam.getHall()))
+			.andExpect(jsonPath("$[0].maxSeats").value(informaticsExam.getMaxSeats()));
+	}
+
+	@Test
+	@Transactional
+	public void should_ListFilterExamDatesByExactStartDate() throws Exception {
+		final Subject maths = this.createSubject("Maths");
+		final Subject informatics = this.createSubject("Informatics");
+		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
+		subjectService.updateAssignees(informatics.getId(), new String[]{ prof.getUsername() }, null);
+
+		final NewExamModel mathsExam = new NewExamModel(
+			maths.getId(),
+			1599487245000L, // Monday, 7 September 2020 14:00:45
+			1599494445000L, // Monday, 7 September 2020 16:00:45
+			"403a",
+			25
+		);
+
+		final NewExamModel informaticsExam = new NewExamModel(
+			informatics.getId(),
+			1594116045000L, // Sunday, 7 June 2020 10:00:45
+			1594126845000L, // Sunday, 7 June 2020 13:00:45
+			"501c",
+			15
+		);
+
+		this.examService.create(mathsExam, prof);
+		this.examService.create(informaticsExam, prof);
+
+		this.get(ENDPOINT + "?date=07.07.2020" , profJwt)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$").isArray())
+			.andExpect(jsonPath("$[0].subject.name").value(informatics.getName()))
+			.andExpect(jsonPath("$[0].hall").value(informaticsExam.getHall()))
+			.andExpect(jsonPath("$[0].maxSeats").value(informaticsExam.getMaxSeats()));
 	}
 
 	@Test

@@ -5,9 +5,12 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,11 +42,12 @@ public class ExamResource {
 
 	@RequestMapping(method = GET)
 	@ResponseBody
-	public List<Exam> getExams() {
-		final List<Exam> all = this.examService.getAll();
-
-		all.size();
-		return all;
+	public List<Exam> getExams(
+		@RequestParam(required=false) Long subjectId,
+		@RequestParam(required=false) @DateTimeFormat(pattern="dd.MM.yyyy", iso=ISO.NONE) Date date,
+		@RequestParam(required=false) Long professorId
+	) {
+		return this.examService.getAll(subjectId, date, professorId);
 	}
 
 	@RequestMapping(method = GET, path="/{examId}")
