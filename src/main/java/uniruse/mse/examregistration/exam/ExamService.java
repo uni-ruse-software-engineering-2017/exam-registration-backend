@@ -6,10 +6,12 @@ import static uniruse.mse.examregistration.exam.ExamSpecifications.startsOn;
 import static uniruse.mse.examregistration.exam.ExamSpecifications.withProfessorId;
 import static uniruse.mse.examregistration.exam.ExamSpecifications.withSubjectId;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
@@ -73,7 +75,13 @@ public class ExamService {
 	}
 
 	public Exam create(NewExamModel newExam, Professor professor) {
-		// TODO: Dates validation
+		LocalDateTime examStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(newExam.getStartTime()), TimeZone.getDefault().toZoneId());
+		LocalDateTime threeDaysFromNow = LocalDateTime.now().plusDays(3);
+
+		if (examStartTime.isBefore(threeDaysFromNow)) {
+			throw new OperationNotAllowedException("Exam can not be created because there are less than three days until the exam starts.");	
+		}
+
 		final Exam exam = new Exam();
 		exam.setStartTime(new Date(newExam.getStartTime()));
 		exam.setEndTime(new Date(newExam.getEndTime()));
@@ -84,7 +92,7 @@ public class ExamService {
 
 		if (subject == null) {
 			throw new ObjectNotFoundException("Subject with ID " + newExam.getSubjectId() + " was not found.");
-		}
+		} 
 
 		if (!hasRightsToPublishExam(professor, subject)) {
 			throw new AccessDeniedException("Professor not allowed to create exams for subject " + subject.getName());
@@ -97,7 +105,13 @@ public class ExamService {
 
 	public Exam update(Long examId, Exam newExamData) {
 		final Exam exam = this.getById(examId);
+		final LocalDateTime now = LocalDateTime.now();
+		LocalDateTime threeDaysBeforeStart = exam.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusDays(3);
 
+		if (exam.getParticipationRequests().size() > 0 && now.isAfter(threeDaysBeforeStart)) {
+			throw new OperationNotAllowedException("Exam can not be changed because there are less than three days until the exam starts.");
+		}
+			
 		if (newExamData.getHall() != null && newExamData.getHall() != "") {
 			exam.setHall(newExamData.getHall());
 		}

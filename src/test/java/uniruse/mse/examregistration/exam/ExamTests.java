@@ -5,6 +5,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import javax.transaction.Transactional;
 
@@ -47,11 +49,13 @@ public class ExamTests extends BaseTest {
 	public void should_CreateNewExamDate() throws Exception {
 		final Subject maths = this.createSubject("Maths");
 		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
-
+		LocalDateTime start = LocalDateTime.now().plusDays(5);
+		LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
+		
 		final NewExamModel model = new NewExamModel(
 			maths.getId(),
-			Instant.now().toEpochMilli(),
-			Instant.now().toEpochMilli() + 3600L * 1000,
+			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+			end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
 			"403a",
 			25
 		);
@@ -72,14 +76,17 @@ public class ExamTests extends BaseTest {
 	@Test
 	public void should_NotCreateExamDateIfProfessorDoesntHaveTheSubjectAssigned() throws Exception {
 		final Subject maths = this.createSubject("Maths");
-
+		LocalDateTime start = LocalDateTime.now().plusDays(5);
+		LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
+		
 		final NewExamModel model = new NewExamModel(
 			maths.getId(),
-			Instant.now().toEpochMilli(),
-			Instant.now().toEpochMilli() + 3600L * 1000,
+			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+			end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
 			"403a",
 			25
 		);
+		
 
 		final String jsonBody = this.toJson(model);
 
@@ -194,6 +201,24 @@ public class ExamTests extends BaseTest {
 			.andExpect(jsonPath("$.subject.name").value(createdExam.getSubject().getName()))
 			.andExpect(jsonPath("$.hall").value(examPatch.getHall()))
 			.andExpect(jsonPath("$.maxSeats").value(examPatch.getMaxSeats()));
+	}
+	
+	// TODO: Fix test
+	@Transactional
+	public void should_NotUpdateExamDetailsWhenThereAreLessThan3DaysRemaining() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
+
+		examService.applyForExam(student, createdExam.getId());
+
+		final Exam examPatch = new Exam();
+		examPatch.setHall("101a");
+		examPatch.setMaxSeats(30);
+
+		final String httpBody = toJson(examPatch);
+
+		this.patch(ENDPOINT + "/" + createdExam.getId(), httpBody, profJwt)
+			.andExpect(status().isUnprocessableEntity());
 	}
 
 	@Test
@@ -369,10 +394,13 @@ public class ExamTests extends BaseTest {
 		final Subject maths = this.createSubject("Maths");
 		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
 
+		LocalDateTime start = LocalDateTime.now().plusDays(5);
+		LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
+		
 		final NewExamModel exam = new NewExamModel(
 			maths.getId(),
-			Instant.now().toEpochMilli(),
-			Instant.now().toEpochMilli() + 3600L * 1000,
+			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+			end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
 			"403a",
 			25
 		);
