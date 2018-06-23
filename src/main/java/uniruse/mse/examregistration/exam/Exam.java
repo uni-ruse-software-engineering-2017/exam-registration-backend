@@ -18,6 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 
@@ -46,7 +47,7 @@ public class Exam {
 	private ApplicationUser professor;
 
 	@OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<ExamParticipationRequest> participationRequests = new ArrayList<>();
+	private List<ExamEnrolment> enrolledStudents = new ArrayList<>();
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date createdOn;
@@ -137,12 +138,40 @@ public class Exam {
 		this.modifiedOn = modifiedOn;
 	}
 
-	public List<ExamParticipationRequest> getParticipationRequests() {
-		return participationRequests;
+	public List<ExamEnrolment> getEnrolledStudents() {
+		return enrolledStudents;
 	}
 
-	public void setParticipationRequests(List<ExamParticipationRequest> participationRequests) {
-		this.participationRequests = participationRequests;
+	public void setEnrolledStudents(List<ExamEnrolment> enrolledStudents) {
+		this.enrolledStudents = enrolledStudents;
 	}
 
+	public boolean unenrolStudent(String username) {
+		return this.getEnrolledStudents().removeIf(
+			enrollment -> enrollment.getStudent().getUsername().equals(username)
+		);
+	}
+
+	public boolean hasEnrolledStudent(String username) {
+		return this.getEnrolledStudents()
+		.stream()
+		.filter(
+			enrolment -> enrolment.getStudent().getUsername().equals(username)
+		)
+		.count() > 0;
+	}
+
+	public ExamEnrolment getEnrolledStudentById(Long studentId) {
+		return this.getEnrolledStudents()
+		.stream()
+		.filter(pr -> pr.getStudent().getId() == studentId)
+		.findFirst()
+		.orElseThrow(
+			() -> new OperationNotAllowedException("The selected student has not applied for this exam yet")
+		);
+	}
+
+	public boolean hasEnrolledStudents() {
+		return this.getEnrolledStudents().size() > 0;
+	}
 }

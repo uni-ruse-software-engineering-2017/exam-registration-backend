@@ -1,18 +1,18 @@
 package uniruse.mse.examregistration.exam.model;
 
-import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
+import uniruse.mse.examregistration.exam.ExamEnrolment.ExamEnrolmentStatus;
 
 public class StudentExamParticipationStatusModel {
-	private ExamParticipationRequestStatus status;
+	private ExamEnrolmentStatus status;
 	private String reason;
 
 	public StudentExamParticipationStatusModel() {}
 	
-	public StudentExamParticipationStatusModel(ExamParticipationRequestStatus status) {
+	public StudentExamParticipationStatusModel(ExamEnrolmentStatus status) {
 		this.status = status;
 	}
 	
-	public StudentExamParticipationStatusModel(ExamParticipationRequestStatus status, String reason) {
+	public StudentExamParticipationStatusModel(ExamEnrolmentStatus status, String reason) {
 		this.status = status;
 		this.reason = reason;
 	}
@@ -25,12 +25,12 @@ public class StudentExamParticipationStatusModel {
 		this.reason = reason;
 	}
 
-	public void setStatus(ExamParticipationRequestStatus status) {
+	public void setStatus(ExamEnrolmentStatus status) {
 		this.status = status;
 	}
 
 
-	public ExamParticipationRequestStatus getStatus() {
+	public ExamEnrolmentStatus getStatus() {
 		return this.status;
 	}
 }

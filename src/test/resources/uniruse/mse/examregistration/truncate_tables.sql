@@ -12,6 +12,6 @@ TRUNCATE TABLE professor;
 
 TRUNCATE TABLE subject_professor;
 
-TRUNCATE TABLE exam_participation_request;
+TRUNCATE TABLE exam_enrolment;
 
 SET FOREIGN_KEY_CHECKS=1;

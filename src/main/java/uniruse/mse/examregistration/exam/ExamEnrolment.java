@@ -15,8 +15,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 
 @Entity
-@Table(name = "exam_participation_request")
-public class ExamParticipationRequest {
+@Table(name = "exam_enrolment")
+public class ExamEnrolment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +32,7 @@ public class ExamParticipationRequest {
 	private ApplicationUser student;
 
 	@Enumerated(EnumType.STRING)
-	private ExamParticipationRequestStatus status;
+	private ExamEnrolmentStatus status;
 
 	private String reason;
 
@@ -68,15 +68,15 @@ public class ExamParticipationRequest {
 		this.student = student;
 	}
 
-	public ExamParticipationRequestStatus getStatus() {
+	public ExamEnrolmentStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(ExamParticipationRequestStatus status) {
+	public void setStatus(ExamEnrolmentStatus status) {
 		this.status = status;
 	}
 
-	public static enum ExamParticipationRequestStatus {
+	public static enum ExamEnrolmentStatus {
 		PENDING, APPROVED, REJECTED
 	}
 }

@@ -7,11 +7,11 @@ import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-class ExamParticipationRequestRepository extends SimpleJpaRepository<ExamParticipationRequest, Long> {
+class ExamEnrolmentRepository extends SimpleJpaRepository<ExamEnrolment, Long> {
 
 	@Autowired
-	public ExamParticipationRequestRepository(EntityManager em) {
-		super(ExamParticipationRequest.class, em);
+	public ExamEnrolmentRepository(EntityManager em) {
+		super(ExamEnrolment.class, em);
 	}
 
 }

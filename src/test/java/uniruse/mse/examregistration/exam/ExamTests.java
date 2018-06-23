@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 
 import uniruse.mse.examregistration.BaseTest;
-import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
+import uniruse.mse.examregistration.exam.ExamEnrolment.ExamEnrolmentStatus;
 import uniruse.mse.examregistration.exam.model.NewExamModel;
 import uniruse.mse.examregistration.exam.model.StudentExamParticipationStatusModel;
 import uniruse.mse.examregistration.subject.Subject;
@@ -207,7 +207,7 @@ public class ExamTests extends BaseTest {
 		final Exam createdExam = createTestExam();
 		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
 
-		examService.applyForExam(student, createdExam.getId());
+		examService.enrol(student, createdExam.getId());
 
 		final Exam examPatch = new Exam();
 		examPatch.setHall("101a");
@@ -225,10 +225,10 @@ public class ExamTests extends BaseTest {
 		final Exam createdExam = createTestExam();
 		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
 
-		examService.applyForExam(student, createdExam.getId());
+		examService.enrol(student, createdExam.getId());
 
 		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
-			ExamParticipationRequestStatus.APPROVED
+			ExamEnrolmentStatus.APPROVED
 		);
 
 		final String httpBody = toJson(status);
@@ -243,10 +243,10 @@ public class ExamTests extends BaseTest {
 		final Exam createdExam = createTestExam();
 		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
 
-		examService.applyForExam(student, createdExam.getId());
+		examService.enrol(student, createdExam.getId());
 
 		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
-			ExamParticipationRequestStatus.REJECTED, "No coursework provided!"
+			ExamEnrolmentStatus.REJECTED, "No coursework provided!"
 		);
 
 		final String httpBody = toJson(status);
@@ -261,10 +261,10 @@ public class ExamTests extends BaseTest {
 		final Exam createdExam = createTestExam();
 		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
 
-		examService.applyForExam(student, createdExam.getId());
+		examService.enrol(student, createdExam.getId());
 
 		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
-			ExamParticipationRequestStatus.REJECTED
+			ExamEnrolmentStatus.REJECTED
 		);
 
 		final String httpBody = toJson(status);
@@ -279,10 +279,10 @@ public class ExamTests extends BaseTest {
 		final Exam createdExam = createTestExam();
 		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
 
-		examService.applyForExam(student, createdExam.getId());
+		examService.enrol(student, createdExam.getId());
 
 		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
-			ExamParticipationRequestStatus.REJECTED
+			ExamEnrolmentStatus.REJECTED
 		);
 
 		final String httpBody = toJson(status);
@@ -299,10 +299,10 @@ public class ExamTests extends BaseTest {
 		final Exam createdExam = createTestExam();
 		final Student student = createActiveStudent("s136500@ami.uni-ruse.bg", "12345678");
 
-		examService.applyForExam(student, createdExam.getId());
+		examService.enrol(student, createdExam.getId());
 
 		final StudentExamParticipationStatusModel status = new StudentExamParticipationStatusModel(
-			ExamParticipationRequestStatus.APPROVED
+			ExamEnrolmentStatus.APPROVED
 		);
 
 		final String httpBody = toJson(status);
@@ -329,52 +329,51 @@ public class ExamTests extends BaseTest {
 
 	@Test
 	@Transactional
-	public void should_ApplyForExamAsStudent() throws Exception {
+	public void should_EnrolForExamAsStudent() throws Exception {
 		final Exam createdExam = createTestExam();
 		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
 
-		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/enrol", "", studentLogin.getSecond())
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.participationRequests[0].student.username").value(
+			.andExpect(jsonPath("$.enrolledStudents[0].student.username").value(
 				studentLogin.getFirst().getUsername()
 			));
 	}
 
 	@Test
 	@Transactional
-	public void should_NotBeAbleToApplyForExamAsStudentIfAlreadyApplied() throws Exception {
+	public void should_NotBeAbleToEnrolForExamAsStudentIfAlreadyEnrolled() throws Exception {
 		final Exam createdExam = createTestExam();
 		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
 
-		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/enrol", "", studentLogin.getSecond())
 			.andExpect(status().isOk());
 
-		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/enrol", "", studentLogin.getSecond())
 			.andExpect(status().isUnprocessableEntity());
-
 	}
 
 	@Test
 	@Transactional
-	public void should_CancelExamApplicationAsStudent() throws Exception {
+	public void should_UnenrolForExamAsStudent() throws Exception {
 		final Exam createdExam = createTestExam();
 		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
 
-		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/enrol", "", studentLogin.getSecond())
 			.andExpect(status().isOk());
 
-		this.post(ENDPOINT + "/" + createdExam.getId() + "/cancel", "", studentLogin.getSecond())
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/unenrol", "", studentLogin.getSecond())
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.participationRequests").isEmpty());
+			.andExpect(jsonPath("$.enrolledStudents").isEmpty());
 	}
 
 	@Test
 	@Transactional
-	public void should_FailToCancelExamApplicationAsStudentIfHaventAppliedBeforehand() throws Exception {
+	public void should_FailToUnenrolAsStudentIfHaventEnrolledBeforehand() throws Exception {
 		final Exam createdExam = createTestExam();
 		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
 
-		this.post(ENDPOINT + "/" + createdExam.getId() + "/cancel", "", studentLogin.getSecond())
+		this.post(ENDPOINT + "/" + createdExam.getId() + "/unenrol", "", studentLogin.getSecond())
 			.andExpect(status().isUnprocessableEntity());
 	}
 

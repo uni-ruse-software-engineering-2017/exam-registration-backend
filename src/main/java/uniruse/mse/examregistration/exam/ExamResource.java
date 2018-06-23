@@ -137,27 +137,27 @@ public class ExamResource {
 			.getByUsername(auth.getName())
 			.get();
 
-		return this.examService.changeStudentParticipationStatus(studentId, examId, model, currentProf);
+		return this.examService.changeStudentEnrolmentStatus(studentId, examId, model, currentProf);
 	}
 
-	@RequestMapping(method = POST, path="/{examId}/apply")
+	@RequestMapping(method = POST, path="/{examId}/enrol")
 	@PreAuthorize("hasRole('STUDENT')")
-	public Exam applyForExam(@PathVariable Long examId, Authentication auth) {
+	public Exam enrol(@PathVariable Long examId, Authentication auth) {
 		final Student currentStudent = (Student) this.userService
 			.getByUsername(auth.getName())
 			.get();
 
-		return this.examService.applyForExam(currentStudent, examId);
+		return this.examService.enrol(currentStudent, examId);
 	}
 
 
-	@RequestMapping(method = POST, path="/{examId}/cancel")
+	@RequestMapping(method = POST, path="/{examId}/unenrol")
 	@PreAuthorize("hasRole('STUDENT')")
-	public Exam cancelExamApplication(@PathVariable Long examId, Authentication auth) {
+	public Exam unenrol(@PathVariable Long examId, Authentication auth) {
 		final Student currentStudent = (Student) this.userService
 			.getByUsername(auth.getName())
 			.get();
 
-		return this.examService.cancelExamApplication(currentStudent, examId);
+		return this.examService.unenrol(currentStudent, examId);
 	}
 }

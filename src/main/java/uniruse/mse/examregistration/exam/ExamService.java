@@ -22,7 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import uniruse.mse.examregistration.exam.ExamParticipationRequest.ExamParticipationRequestStatus;
+import uniruse.mse.examregistration.exam.ExamEnrolment.ExamEnrolmentStatus;
 import uniruse.mse.examregistration.exam.model.NewExamModel;
 import uniruse.mse.examregistration.exam.model.StudentExamParticipationStatusModel;
 import uniruse.mse.examregistration.exception.ObjectNotFoundException;
@@ -107,7 +107,7 @@ public class ExamService {
 		final LocalDateTime now = LocalDateTime.now();
 		final LocalDateTime threeDaysBeforeStart = exam.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusDays(3);
 
-		if (exam.getParticipationRequests().size() > 0 && now.isAfter(threeDaysBeforeStart)) {
+		if (exam.hasEnrolledStudents() && now.isAfter(threeDaysBeforeStart)) {
 			throw new OperationNotAllowedException("Exam can not be changed because there are less than three days until the exam starts.");
 		}
 
@@ -138,7 +138,7 @@ public class ExamService {
 		examRepository.delete(exam);
 	}
 
-	public Exam applyForExam(Student student, Long examId) {
+	public Exam enrol(Student student, Long examId) {
 		// TODO: check exam date
 		final Exam exam = this.getById(examId);
 
@@ -149,28 +149,23 @@ public class ExamService {
 		}
 
 		// check if user has already applied for that exam
-		if (exam.getParticipationRequests()
-				.stream()
-				.filter(
-					(pr) -> pr.getStudent().getUsername().equals(student.getUsername()))
-				.count() > 0
-		) {
+		if (exam.hasEnrolledStudent(student.getUsername())) {
 			throw new OperationNotAllowedException(
 				"You have already applied for this exam."
 			);
 		}
 
-		final ExamParticipationRequest epr = new ExamParticipationRequest();
-		epr.setExam(exam);
-		epr.setStatus(ExamParticipationRequestStatus.PENDING);
-		epr.setStudent(student);
+		final ExamEnrolment enrolment = new ExamEnrolment();
+		enrolment.setExam(exam);
+		enrolment.setStatus(ExamEnrolmentStatus.PENDING);
+		enrolment.setStudent(student);
 
-		exam.getParticipationRequests().add(epr);
+		exam.getEnrolledStudents().add(enrolment);
 
 		return examRepository.save(exam);
 	}
 
-	public Exam cancelExamApplication(Student student, Long examId) {
+	public Exam unenrol(Student student, Long examId) {
 		// TODO: check exam date
 		final Exam exam = this.getById(examId);
 
@@ -180,11 +175,9 @@ public class ExamService {
 			);
 		}
 
-		final boolean wasRemoved = exam.getParticipationRequests().removeIf(
-			enrollment -> enrollment.getStudent().getUsername().equals(student.getUsername())
-		);
+		final boolean wasUnenrolled = exam.unenrolStudent(student.getUsername());
 
-		if (!wasRemoved) {
+		if (!wasUnenrolled) {
 			throw new OperationNotAllowedException(
 				"You haven't applied for this exam yet."
 			);
@@ -193,7 +186,7 @@ public class ExamService {
 		return examRepository.save(exam);
 	}
 
-	public Exam changeStudentParticipationStatus(Long studentId, Long examId, StudentExamParticipationStatusModel statusChange, Professor prof) {
+	public Exam changeStudentEnrolmentStatus(Long studentId, Long examId, StudentExamParticipationStatusModel statusChange, Professor prof) {
 		final Exam exam = this.getById(examId);
 
 		if (exam == null) {
@@ -208,19 +201,13 @@ public class ExamService {
 			);
 		}
 
-		final ExamParticipationRequest participationRequest = exam.getParticipationRequests()
-			.stream()
-			.filter(pr -> pr.getStudent().getId() == studentId)
-			.findFirst()
-			.orElseThrow(
-				() -> new OperationNotAllowedException("The selected student has not applied for this exam yet")
-			);
+		final ExamEnrolment enrolment = exam.getEnrolledStudentById(studentId);
 
-		if (participationRequest.getStatus() != statusChange.getStatus()) {
-			participationRequest.setStatus(statusChange.getStatus());
+		if (enrolment.getStatus() != statusChange.getStatus()) {
+			enrolment.setStatus(statusChange.getStatus());
 
-			if (statusChange.getStatus() == ExamParticipationRequestStatus.REJECTED) {
-				participationRequest.setReason(statusChange.getReason());
+			if (statusChange.getStatus() == ExamEnrolmentStatus.REJECTED) {
+				enrolment.setReason(statusChange.getReason());
 				if (statusChange.getReason() == null || statusChange.getReason().equals("")) {
 					throw new OperationNotAllowedException("You must provide a reason for the rejection");
 				}
@@ -234,7 +221,7 @@ public class ExamService {
 		}
 	}
 
-	private boolean hasExamFinished(Exam exam) {
+	public boolean hasExamFinished(Exam exam) {
 		final LocalDateTime examFinishesAt = toLocalDateTime(exam.getEndTime());
 
 		if (examFinishesAt.isBefore(LocalDateTime.now())) {
