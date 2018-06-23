@@ -45,7 +45,7 @@ public class Exam {
 	@ManyToOne(fetch = FetchType.EAGER)
 	private ApplicationUser professor;
 
-	@OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ExamParticipationRequest> participationRequests = new ArrayList<>();
 
 	@Temporal(TemporalType.TIMESTAMP)

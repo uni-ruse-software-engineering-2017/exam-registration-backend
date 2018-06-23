@@ -27,13 +27,13 @@ public class ExamParticipationRequest {
 	@JsonIgnore
 	private Exam exam;
 
-	@ManyToOne
+	@ManyToOne()
 	@JoinColumn(name = "student_id")
 	private ApplicationUser student;
 
 	@Enumerated(EnumType.STRING)
 	private ExamParticipationRequestStatus status;
-	
+
 	private String reason;
 
 	public Long getId() {

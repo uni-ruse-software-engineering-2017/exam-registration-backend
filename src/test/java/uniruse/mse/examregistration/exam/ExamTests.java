@@ -1,10 +1,8 @@
 package uniruse.mse.examregistration.exam;
 
-import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -49,9 +47,9 @@ public class ExamTests extends BaseTest {
 	public void should_CreateNewExamDate() throws Exception {
 		final Subject maths = this.createSubject("Maths");
 		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
-		LocalDateTime start = LocalDateTime.now().plusDays(5);
-		LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
-		
+		final LocalDateTime start = LocalDateTime.now().plusDays(5);
+		final LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
+
 		final NewExamModel model = new NewExamModel(
 			maths.getId(),
 			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
@@ -76,9 +74,9 @@ public class ExamTests extends BaseTest {
 	@Test
 	public void should_NotCreateExamDateIfProfessorDoesntHaveTheSubjectAssigned() throws Exception {
 		final Subject maths = this.createSubject("Maths");
-		LocalDateTime start = LocalDateTime.now().plusDays(5);
-		LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
-		
+		final LocalDateTime start = LocalDateTime.now().plusDays(5);
+		final LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
+
 		final NewExamModel model = new NewExamModel(
 			maths.getId(),
 			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
@@ -86,7 +84,7 @@ public class ExamTests extends BaseTest {
 			"403a",
 			25
 		);
-		
+
 
 		final String jsonBody = this.toJson(model);
 
@@ -202,7 +200,7 @@ public class ExamTests extends BaseTest {
 			.andExpect(jsonPath("$.hall").value(examPatch.getHall()))
 			.andExpect(jsonPath("$.maxSeats").value(examPatch.getMaxSeats()));
 	}
-	
+
 	// TODO: Fix test
 	@Transactional
 	public void should_NotUpdateExamDetailsWhenThereAreLessThan3DaysRemaining() throws Exception {
@@ -319,7 +317,7 @@ public class ExamTests extends BaseTest {
 
 	@Test
 	@Transactional
-	public void should_CancelExam() throws Exception {
+	public void should_StudentShouldCancelFromExamParticipation() throws Exception {
 		final Exam createdExam = createTestExam();
 
 		this.delete(ENDPOINT + "/" + createdExam.getId(), profJwt)
@@ -329,7 +327,6 @@ public class ExamTests extends BaseTest {
 			.andExpect(status().isNotFound());
 	}
 
-
 	@Test
 	@Transactional
 	public void should_ApplyForExamAsStudent() throws Exception {
@@ -337,7 +334,10 @@ public class ExamTests extends BaseTest {
 		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
 
 		this.post(ENDPOINT + "/" + createdExam.getId() + "/apply", "", studentLogin.getSecond())
-			.andExpect(status().isOk());
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.participationRequests[0].student.username").value(
+				studentLogin.getFirst().getUsername()
+			));
 	}
 
 	@Test
@@ -364,11 +364,8 @@ public class ExamTests extends BaseTest {
 			.andExpect(status().isOk());
 
 		this.post(ENDPOINT + "/" + createdExam.getId() + "/cancel", "", studentLogin.getSecond())
-			.andExpect(status().isOk());
-
-		final Exam updatedExam = this.examService.getById(createdExam.getId());
-
-		assertEquals(0, updatedExam.getParticipationRequests().size());
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.participationRequests").isEmpty());
 	}
 
 	@Test
@@ -394,9 +391,9 @@ public class ExamTests extends BaseTest {
 		final Subject maths = this.createSubject("Maths");
 		subjectService.updateAssignees(maths.getId(), new String[]{ prof.getUsername() }, null);
 
-		LocalDateTime start = LocalDateTime.now().plusDays(5);
-		LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
-		
+		final LocalDateTime start = LocalDateTime.now().plusDays(5);
+		final LocalDateTime end = LocalDateTime.now().plusDays(5).plusHours(2);
+
 		final NewExamModel exam = new NewExamModel(
 			maths.getId(),
 			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),

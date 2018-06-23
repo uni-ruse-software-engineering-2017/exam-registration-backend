@@ -127,7 +127,7 @@ public class ExamResource {
 	@RequestMapping(method = PATCH, path="/{examId}/student/{studentId}")
 	@ResponseBody
 	@PreAuthorize("hasRole('PROFESSOR')")
-	public Exam applyForExam(
+	public Exam changeStudentExamParticipationStatus(
 		@PathVariable Long examId,
 		@PathVariable Long studentId,
 		Authentication auth,
@@ -142,24 +142,22 @@ public class ExamResource {
 
 	@RequestMapping(method = POST, path="/{examId}/apply")
 	@PreAuthorize("hasRole('STUDENT')")
-	public void applyForExam(@PathVariable Long examId, Authentication auth) {
+	public Exam applyForExam(@PathVariable Long examId, Authentication auth) {
 		final Student currentStudent = (Student) this.userService
 			.getByUsername(auth.getName())
 			.get();
 
-		this.examService.applyForExam(currentStudent, examId);
-		return;
+		return this.examService.applyForExam(currentStudent, examId);
 	}
 
 
 	@RequestMapping(method = POST, path="/{examId}/cancel")
 	@PreAuthorize("hasRole('STUDENT')")
-	public void cancelExamApplication(@PathVariable Long examId, Authentication auth) {
+	public Exam cancelExamApplication(@PathVariable Long examId, Authentication auth) {
 		final Student currentStudent = (Student) this.userService
 			.getByUsername(auth.getName())
 			.get();
 
-		this.examService.cancelExamApplication(currentStudent, examId);
-		return;
+		return this.examService.cancelExamApplication(currentStudent, examId);
 	}
 }

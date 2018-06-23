@@ -12,7 +12,6 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -75,11 +74,11 @@ public class ExamService {
 	}
 
 	public Exam create(NewExamModel newExam, Professor professor) {
-		LocalDateTime examStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(newExam.getStartTime()), TimeZone.getDefault().toZoneId());
-		LocalDateTime threeDaysFromNow = LocalDateTime.now().plusDays(3);
+		final LocalDateTime examStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(newExam.getStartTime()), TimeZone.getDefault().toZoneId());
+		final LocalDateTime threeDaysFromNow = LocalDateTime.now().plusDays(3);
 
 		if (examStartTime.isBefore(threeDaysFromNow)) {
-			throw new OperationNotAllowedException("Exam can not be created because there are less than three days until the exam starts.");	
+			throw new OperationNotAllowedException("Exam can not be created because there are less than three days until the exam starts.");
 		}
 
 		final Exam exam = new Exam();
@@ -92,7 +91,7 @@ public class ExamService {
 
 		if (subject == null) {
 			throw new ObjectNotFoundException("Subject with ID " + newExam.getSubjectId() + " was not found.");
-		} 
+		}
 
 		if (!hasRightsToPublishExam(professor, subject)) {
 			throw new AccessDeniedException("Professor not allowed to create exams for subject " + subject.getName());
@@ -106,12 +105,12 @@ public class ExamService {
 	public Exam update(Long examId, Exam newExamData) {
 		final Exam exam = this.getById(examId);
 		final LocalDateTime now = LocalDateTime.now();
-		LocalDateTime threeDaysBeforeStart = exam.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusDays(3);
+		final LocalDateTime threeDaysBeforeStart = exam.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusDays(3);
 
 		if (exam.getParticipationRequests().size() > 0 && now.isAfter(threeDaysBeforeStart)) {
 			throw new OperationNotAllowedException("Exam can not be changed because there are less than three days until the exam starts.");
 		}
-			
+
 		if (newExamData.getHall() != null && newExamData.getHall() != "") {
 			exam.setHall(newExamData.getHall());
 		}
@@ -139,7 +138,7 @@ public class ExamService {
 		examRepository.delete(exam);
 	}
 
-	public void applyForExam(Student student, Long examId) {
+	public Exam applyForExam(Student student, Long examId) {
 		// TODO: check exam date
 		final Exam exam = this.getById(examId);
 
@@ -153,7 +152,7 @@ public class ExamService {
 		if (exam.getParticipationRequests()
 				.stream()
 				.filter(
-					(pr) -> pr.getStudent().getUsername() == student.getUsername())
+					(pr) -> pr.getStudent().getUsername().equals(student.getUsername()))
 				.count() > 0
 		) {
 			throw new OperationNotAllowedException(
@@ -168,10 +167,10 @@ public class ExamService {
 
 		exam.getParticipationRequests().add(epr);
 
-		examRepository.save(exam);
+		return examRepository.save(exam);
 	}
 
-	public void cancelExamApplication(Student student, Long examId) {
+	public Exam cancelExamApplication(Student student, Long examId) {
 		// TODO: check exam date
 		final Exam exam = this.getById(examId);
 
@@ -181,30 +180,17 @@ public class ExamService {
 			);
 		}
 
-		// check if user has already applied for that exam
-		if (exam.getParticipationRequests()
-				.stream()
-				.filter(
-					(pr) -> pr.getStudent().getUsername() == student.getUsername()
-				)
-				.count() == 0
-		) {
+		final boolean wasRemoved = exam.getParticipationRequests().removeIf(
+			enrollment -> enrollment.getStudent().getUsername().equals(student.getUsername())
+		);
+
+		if (!wasRemoved) {
 			throw new OperationNotAllowedException(
 				"You haven't applied for this exam yet."
 			);
 		}
 
-		// remove the student's exam application
-		exam.setParticipationRequests(
-			exam.getParticipationRequests()
-				.stream()
-				.filter(
-					(pr) -> pr.getStudent().getUsername() != student.getUsername()
-				)
-				.collect(Collectors.toList())
-		);
-
-		examRepository.save(exam);
+		return examRepository.save(exam);
 	}
 
 	public Exam changeStudentParticipationStatus(Long studentId, Long examId, StudentExamParticipationStatusModel statusChange, Professor prof) {
