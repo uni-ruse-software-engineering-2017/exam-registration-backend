@@ -1,10 +1,11 @@
 package uniruse.mse.examregistration.exam;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 
 import org.springframework.data.jpa.domain.Specification;
+
+import uniruse.mse.examregistration.util.DateConverter;
 
 public class ExamSpecifications {
 	public static Specification<Exam> hasFinished() {
@@ -19,9 +20,13 @@ public class ExamSpecifications {
 
 	public static Specification<Exam> startsOn(Date date) {
 		return (root, query, criteriaBuilder) -> {
-			final LocalDateTime startOfDay = toLocalDateTime(date).withHour(0).withMinute(0);
-			final LocalDateTime endOfDay = toLocalDateTime(date).withHour(23).withMinute(59);
-			return criteriaBuilder.between(root.<Date>get("startTime").as(java.util.Date.class), toDate(startOfDay), toDate(endOfDay));
+			final LocalDateTime startOfDay = DateConverter.toLocalDateTime(date).withHour(0).withMinute(0);
+			final LocalDateTime endOfDay = DateConverter.toLocalDateTime(date).withHour(23).withMinute(59);
+			return criteriaBuilder.between(
+				root.<Date>get("startTime").as(java.util.Date.class),
+				DateConverter.fromLocalDateTime(startOfDay),
+				DateConverter.fromLocalDateTime(endOfDay)
+			);
 		};
 	}
 
@@ -35,11 +40,4 @@ public class ExamSpecifications {
 			criteriaBuilder.equal(root.get("professor"), professorId);
 	}
 
-	private static LocalDateTime toLocalDateTime(Date date) {
-		return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-	}
-
-	private static Date toDate(LocalDateTime dateToConvert) {
-	    return java.sql.Timestamp.valueOf(dateToConvert);
-	}
 }

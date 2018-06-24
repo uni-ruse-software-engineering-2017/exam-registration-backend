@@ -4,7 +4,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 import javax.transaction.Transactional;
 
@@ -22,6 +21,7 @@ import uniruse.mse.examregistration.subject.SubjectService;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.Student;
+import uniruse.mse.examregistration.util.DateConverter;
 
 public class ExamTests extends BaseTest {
 	private final static String ENDPOINT = "/exams";
@@ -52,8 +52,8 @@ public class ExamTests extends BaseTest {
 
 		final NewExamModel model = new NewExamModel(
 			maths.getId(),
-			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-			end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+			DateConverter.toUnixTimestamp(start),
+			DateConverter.toUnixTimestamp(end),
 			"403a",
 			25
 		);
@@ -79,8 +79,8 @@ public class ExamTests extends BaseTest {
 
 		final NewExamModel model = new NewExamModel(
 			maths.getId(),
-			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-			end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+			DateConverter.toUnixTimestamp(start),
+			DateConverter.toUnixTimestamp(end),
 			"403a",
 			25
 		);
@@ -395,8 +395,8 @@ public class ExamTests extends BaseTest {
 
 		final NewExamModel exam = new NewExamModel(
 			maths.getId(),
-			start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-			end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+			DateConverter.toUnixTimestamp(start),
+			DateConverter.toUnixTimestamp(end),
 			"403a",
 			25
 		);
