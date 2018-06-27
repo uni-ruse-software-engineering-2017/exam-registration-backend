@@ -1,17 +1,16 @@
 package uniruse.mse.examregistration.exam;
 
 import static org.springframework.data.jpa.domain.Specification.where;
+import static uniruse.mse.examregistration.exam.ExamSpecifications.hasEnrolledStudentWithId;
 import static uniruse.mse.examregistration.exam.ExamSpecifications.hasNotFinished;
+import static uniruse.mse.examregistration.exam.ExamSpecifications.hasNotStarted;
 import static uniruse.mse.examregistration.exam.ExamSpecifications.startsOn;
 import static uniruse.mse.examregistration.exam.ExamSpecifications.withProfessorId;
 import static uniruse.mse.examregistration.exam.ExamSpecifications.withSubjectId;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import javax.transaction.Transactional;
 
@@ -31,6 +30,7 @@ import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.subject.SubjectService;
 import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.Student;
+import uniruse.mse.examregistration.util.DateConverter;
 
 @Service
 public class ExamService {
@@ -67,6 +67,12 @@ public class ExamService {
 		);
 	}
 
+	public List<Exam> getUpcomingForStudent(Student student) {
+		final Specification<Exam> criteria = where(hasEnrolledStudentWithId(student)).and(hasNotStarted());
+
+		return this.examRepository.findAll(criteria, new Sort(Direction.ASC, "startTime"));
+	}
+
 	public Exam getById(Long examId) {
 		return this.examRepository.findById(examId).orElseThrow(
 			() -> new ObjectNotFoundException("Exam with ID " + examId + " was not found.")
@@ -74,11 +80,13 @@ public class ExamService {
 	}
 
 	public Exam create(NewExamModel newExam, Professor professor) {
-		final LocalDateTime examStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(newExam.getStartTime()), TimeZone.getDefault().toZoneId());
+		final LocalDateTime examStartTime = DateConverter.fromTimestamp(newExam.getStartTime());
 		final LocalDateTime threeDaysFromNow = LocalDateTime.now().plusDays(3);
 
 		if (examStartTime.isBefore(threeDaysFromNow)) {
-			throw new OperationNotAllowedException("Exam can not be created because there are less than three days until the exam starts.");
+			throw new OperationNotAllowedException(
+				"Exam can not be created because there are less than three days until the exam starts."
+			);
 		}
 
 		final Exam exam = new Exam();
@@ -105,7 +113,7 @@ public class ExamService {
 	public Exam update(Long examId, Exam newExamData) {
 		final Exam exam = this.getById(examId);
 		final LocalDateTime now = LocalDateTime.now();
-		final LocalDateTime threeDaysBeforeStart = exam.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusDays(3);
+		final LocalDateTime threeDaysBeforeStart = DateConverter.toLocalDateTime(exam.getStartTime()).minusDays(3);
 
 		if (exam.hasEnrolledStudents() && now.isAfter(threeDaysBeforeStart)) {
 			throw new OperationNotAllowedException("Exam can not be changed because there are less than three days until the exam starts.");
@@ -222,7 +230,7 @@ public class ExamService {
 	}
 
 	public boolean hasExamFinished(Exam exam) {
-		final LocalDateTime examFinishesAt = toLocalDateTime(exam.getEndTime());
+		final LocalDateTime examFinishesAt = DateConverter.toLocalDateTime(exam.getEndTime());
 
 		if (examFinishesAt.isBefore(LocalDateTime.now())) {
 			return true;
@@ -237,9 +245,5 @@ public class ExamService {
 		}
 
 		return subjectChosen.getProfessors().contains(prof);
-	}
-
-	private LocalDateTime toLocalDateTime(Date date) {
-		return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 	}
 }

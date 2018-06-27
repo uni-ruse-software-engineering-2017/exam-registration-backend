@@ -6,7 +6,8 @@ import java.time.ZoneId;
 import java.util.Date;
 
 public final class DateConverter {
-	private static ZoneId zone =  ZoneId.systemDefault();
+	// the application will be deployed in Bulgaria only :)
+	private static ZoneId zone = ZoneId.of("Europe/Sofia");
 
 	public static Long toUnixTimestamp(LocalDateTime date) {
 		return date.atZone(zone).toInstant().toEpochMilli();

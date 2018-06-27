@@ -3,11 +3,24 @@ package uniruse.mse.examregistration.exam;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+import javax.persistence.criteria.Join;
+
 import org.springframework.data.jpa.domain.Specification;
 
+import uniruse.mse.examregistration.user.model.Student;
 import uniruse.mse.examregistration.util.DateConverter;
 
 public class ExamSpecifications {
+	public static Specification<Exam> hasStarted() {
+		return (root, query, criteriaBuilder) ->
+			criteriaBuilder.lessThan(root.get("startTime"), new Date());
+	}
+
+	public static Specification<Exam> hasNotStarted() {
+		return (root, query, criteriaBuilder) ->
+			criteriaBuilder.greaterThan(root.get("startTime"), new Date());
+	}
+
 	public static Specification<Exam> hasFinished() {
 		return (root, query, criteriaBuilder) ->
 			criteriaBuilder.lessThan(root.get("endTime"), new Date());
@@ -40,4 +53,10 @@ public class ExamSpecifications {
 			criteriaBuilder.equal(root.get("professor"), professorId);
 	}
 
+	public static Specification<Exam> hasEnrolledStudentWithId(Student student) {
+		return (root, query, criteriaBuilder) -> {
+			final Join<Exam, ExamEnrolment> enrolments = root.join("enrolledStudents");
+			return criteriaBuilder.equal(enrolments.get("student").get("id"), student.getId());
+		};
+	}
 }

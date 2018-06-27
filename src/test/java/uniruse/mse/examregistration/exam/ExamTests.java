@@ -184,6 +184,39 @@ public class ExamTests extends BaseTest {
 
 	@Test
 	@Transactional
+	public void should_ListUpcomingExamsForAStudent() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
+
+		// verify that there won't be any "upcoming exams" when
+		// the student hasn't enrolled to any exams yet
+		this.get(ENDPOINT + "/upcoming", studentLogin.getSecond())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$").isArray())
+			.andExpect(jsonPath("$").isEmpty());
+
+		// verify that the exam which the student enrolled for will show up
+		this.examService.enrol((Student) studentLogin.getFirst(), createdExam.getId());
+		this.get(ENDPOINT + "/upcoming", studentLogin.getSecond())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$").isArray())
+			.andExpect(jsonPath("$").isNotEmpty())
+			.andExpect(jsonPath("$.[0].id").value(createdExam.getId()))
+			.andExpect(jsonPath("$.[0].subject.name").value(createdExam.getSubject().getName()))
+			.andExpect(jsonPath("$.[0].professor.username").value(createdExam.getProfessor().getUsername()))
+			.andExpect(jsonPath("$.[1]").doesNotExist());
+
+
+		// verify that after unenrolment the student won't see any upcoming exams
+		this.examService.unenrol((Student) studentLogin.getFirst(), createdExam.getId());
+		this.get(ENDPOINT + "/upcoming", studentLogin.getSecond())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$").isArray())
+			.andExpect(jsonPath("$").isEmpty());
+	}
+
+	@Test
+	@Transactional
 	public void should_UpdateExamDetails() throws Exception {
 		final Exam createdExam = createTestExam();
 

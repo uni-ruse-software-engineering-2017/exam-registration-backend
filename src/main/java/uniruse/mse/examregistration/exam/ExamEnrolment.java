@@ -12,7 +12,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import uniruse.mse.examregistration.user.model.ApplicationUser;
+import uniruse.mse.examregistration.user.model.Student;
 
 @Entity
 @Table(name = "exam_enrolment")
@@ -29,7 +29,7 @@ public class ExamEnrolment {
 
 	@ManyToOne()
 	@JoinColumn(name = "student_id")
-	private ApplicationUser student;
+	private Student student;
 
 	@Enumerated(EnumType.STRING)
 	private ExamEnrolmentStatus status;
@@ -60,11 +60,11 @@ public class ExamEnrolment {
 		this.exam = exam;
 	}
 
-	public ApplicationUser getStudent() {
+	public Student getStudent() {
 		return student;
 	}
 
-	public void setStudent(ApplicationUser student) {
+	public void setStudent(Student student) {
 		this.student = student;
 	}
 

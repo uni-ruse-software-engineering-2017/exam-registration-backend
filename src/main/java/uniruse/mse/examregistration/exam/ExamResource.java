@@ -160,4 +160,14 @@ public class ExamResource {
 
 		return this.examService.unenrol(currentStudent, examId);
 	}
+
+	@RequestMapping(method = GET, path="/upcoming")
+	@ResponseBody
+	@PreAuthorize("hasRole('STUDENT')")
+	public List<Exam> getUpcomingExams(Authentication auth) {
+		final Student currentStudent = (Student) this.userService
+				.getByUsername(auth.getName())
+				.get();
+		return this.examService.getUpcomingForStudent(currentStudent);
+	}
 }
