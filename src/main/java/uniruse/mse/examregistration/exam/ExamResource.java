@@ -27,8 +27,10 @@ import uniruse.mse.examregistration.exam.model.NewExamModel;
 import uniruse.mse.examregistration.exam.model.StudentExamParticipationStatusModel;
 import uniruse.mse.examregistration.exception.ObjectNotFoundException;
 import uniruse.mse.examregistration.user.UserService;
+import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.Student;
+import uniruse.mse.examregistration.user.model.UserRole;
 
 @RestController
 @RequestMapping("/exams")
@@ -163,11 +165,14 @@ public class ExamResource {
 
 	@RequestMapping(method = GET, path="/upcoming")
 	@ResponseBody
-	@PreAuthorize("hasRole('STUDENT')")
+	@PreAuthorize("hasRole('STUDENT') or hasRole('PROFESSOR')")
 	public List<Exam> getUpcomingExams(Authentication auth) {
-		final Student currentStudent = (Student) this.userService
-				.getByUsername(auth.getName())
-				.get();
-		return this.examService.getUpcomingForStudent(currentStudent);
+		final ApplicationUser user = this.userService.getByUsername(auth.getName()).get();
+
+		if(user.getRole() == UserRole.STUDENT) {
+			return this.examService.getStudentUpcoming((Student) user);
+		} else {
+			return this.examService.getProfessorUpcoming((Professor) user);
+		}
 	}
 }

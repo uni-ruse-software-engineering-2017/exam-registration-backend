@@ -13,5 +13,6 @@ TRUNCATE TABLE professor;
 TRUNCATE TABLE subject_professor;
 
 TRUNCATE TABLE exam_enrolment;
+ALTER TABLE exam_enrolment ALTER COLUMN id RESTART WITH 1;
 
 SET FOREIGN_KEY_CHECKS=1;

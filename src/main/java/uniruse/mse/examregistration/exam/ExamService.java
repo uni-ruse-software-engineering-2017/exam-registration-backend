@@ -67,8 +67,14 @@ public class ExamService {
 		);
 	}
 
-	public List<Exam> getUpcomingForStudent(Student student) {
+	public List<Exam> getStudentUpcoming(Student student) {
 		final Specification<Exam> criteria = where(hasEnrolledStudentWithId(student)).and(hasNotStarted());
+
+		return this.examRepository.findAll(criteria, new Sort(Direction.ASC, "startTime"));
+	}
+
+	public List<Exam> getProfessorUpcoming(Professor professor) {
+		final Specification<Exam> criteria = where(withProfessorId(professor.getId())).and(hasNotStarted());
 
 		return this.examRepository.findAll(criteria, new Sort(Direction.ASC, "startTime"));
 	}
