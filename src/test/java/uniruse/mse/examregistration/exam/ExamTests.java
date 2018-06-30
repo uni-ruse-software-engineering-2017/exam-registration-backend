@@ -85,7 +85,6 @@ public class ExamTests extends BaseTest {
 			25
 		);
 
-
 		final String jsonBody = this.toJson(model);
 
 		this.post(ENDPOINT, jsonBody, profJwt)
@@ -184,6 +183,15 @@ public class ExamTests extends BaseTest {
 
 	@Test
 	@Transactional
+	public void should_ShouldCancelExamDate() throws Exception {
+		final Exam createdExam = createTestExam();
+		final Long examId = createdExam.getId();
+
+		this.delete(ENDPOINT + "/" + examId , profJwt).andExpect(status().is(204));
+	}
+
+	@Test
+	@Transactional
 	public void should_ListUpcomingExamsForStudents() throws Exception {
 		final Exam createdExam = createTestExam();
 		final Pair<ApplicationUser, String> studentLogin = this.loginAsStudent();
@@ -238,7 +246,7 @@ public class ExamTests extends BaseTest {
 			.andExpect(jsonPath("$.[1]").doesNotExist());
 
 		// verify that no exams are listed when the exam is cancelled
-		this.examService.cancel(examId);
+		this.examService.cancel(examId,(Professor) createdExam.getProfessor());
 		this.get(ENDPOINT + "/upcoming", profJwt)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$").isArray())

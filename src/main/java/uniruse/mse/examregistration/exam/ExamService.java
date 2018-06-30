@@ -146,8 +146,27 @@ public class ExamService {
 		return savedExam;
 	}
 
-	public void cancel(Long examId) {
+	public void cancel(Long examId, Professor currentProf) {
 		final Exam exam = this.getById(examId);
+
+		if (exam == null) {
+			throw new ObjectNotFoundException(
+				"Exam with ID " + examId + " was not found."
+			);
+		}
+
+		if (exam.getProfessor() != currentProf) {
+			throw new AccessDeniedException(
+				"You are not allowed to cancel the exam date because it is published by " + exam.getProfessor().getUsername()
+			);
+		}
+
+		final LocalDateTime now = LocalDateTime.now();
+		final LocalDateTime threeDaysBeforeStart = DateConverter.toLocalDateTime(exam.getStartTime()).minusDays(3);
+
+		if (exam.hasEnrolledStudents() && now.isAfter(threeDaysBeforeStart) ) {
+			throw new OperationNotAllowedException("Exam can not be cancel because there are less than three days until the exam starts.");
+		}
 
 		examRepository.delete(exam);
 	}
