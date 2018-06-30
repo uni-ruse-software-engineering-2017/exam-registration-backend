@@ -1,5 +1,6 @@
 package uniruse.mse.examregistration.exam;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,6 +23,7 @@ import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
 import uniruse.mse.examregistration.user.model.Professor;
+import uniruse.mse.examregistration.util.DateConverter;
 
 @Entity
 @Table(name = "exam")
@@ -174,5 +176,13 @@ public class Exam {
 
 	public boolean hasEnrolledStudents() {
 		return this.getEnrolledStudents().size() > 0;
+	}
+
+	public boolean hasMoreThanThreeDays() {
+		final LocalDateTime examStartTime = DateConverter.toLocalDateTime(getStartTime());
+		final LocalDateTime threeDaysFromNow = LocalDateTime.now().plusDays(3);
+
+		return examStartTime.isAfter(threeDaysFromNow);
+		
 	}
 }
