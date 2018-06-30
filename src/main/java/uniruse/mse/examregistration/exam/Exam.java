@@ -21,6 +21,7 @@ import javax.persistence.TemporalType;
 import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
+import uniruse.mse.examregistration.user.model.Professor;
 
 @Entity
 @Table(name = "exam")
@@ -43,8 +44,8 @@ public class Exam {
 	@ManyToOne(fetch = FetchType.EAGER)
 	private Subject subject;
 
-	@ManyToOne(fetch = FetchType.EAGER)
-	private ApplicationUser professor;
+	@ManyToOne(fetch = FetchType.EAGER, targetEntity=ApplicationUser.class)
+	private Professor professor;
 
 	@OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ExamEnrolment> enrolledStudents = new ArrayList<>();
@@ -114,11 +115,11 @@ public class Exam {
 		this.subject = subject;
 	}
 
-	public ApplicationUser getProfessor() {
+	public Professor getProfessor() {
 		return professor;
 	}
 
-	public void setProfessor(ApplicationUser professor) {
+	public void setProfessor(Professor professor) {
 		this.professor = professor;
 	}
 

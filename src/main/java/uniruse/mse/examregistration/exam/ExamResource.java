@@ -108,21 +108,7 @@ public class ExamResource {
 			.getByUsername(auth.getName())
 			.get();
 
-		final Exam exam = this.examService.getById(examId);
-
-		if (exam == null) {
-			throw new ObjectNotFoundException(
-				"Exam with ID " + examId + " was not found."
-			);
-		}
-
-		if (exam.getProfessor() != currentProf) {
-			throw new AccessDeniedException(
-				"You are not allowed to cancel the exam date because it is published by " + exam.getProfessor().getUsername()
-			);
-		}
-
-		this.examService.cancel(examId);
+		this.examService.cancel(examId, currentProf);
 		return;
 	}
 
