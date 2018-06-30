@@ -118,10 +118,8 @@ public class ExamService {
 
 	public Exam update(Long examId, Exam newExamData) {
 		final Exam exam = this.getById(examId);
-		final LocalDateTime now = LocalDateTime.now();
-		final LocalDateTime threeDaysBeforeStart = DateConverter.toLocalDateTime(exam.getStartTime()).minusDays(3);
 
-		if (exam.hasEnrolledStudents() && now.isAfter(threeDaysBeforeStart)) {
+		if (exam.hasEnrolledStudents() && !exam.hasMoreThanThreeDays()) {
 			throw new OperationNotAllowedException("Exam can not be changed because there are less than three days until the exam starts.");
 		}
 
@@ -161,10 +159,7 @@ public class ExamService {
 			);
 		}
 
-		final LocalDateTime now = LocalDateTime.now();
-		final LocalDateTime threeDaysBeforeStart = DateConverter.toLocalDateTime(exam.getStartTime()).minusDays(3);
-
-		if (exam.hasEnrolledStudents() && now.isAfter(threeDaysBeforeStart) ) {
+		if (exam.hasEnrolledStudents() && !exam.hasMoreThanThreeDays()) {
 			throw new OperationNotAllowedException("Exam can not be cancel because there are less than three days until the exam starts.");
 		}
 
@@ -185,6 +180,12 @@ public class ExamService {
 		if (exam.hasEnrolledStudent(student.getUsername())) {
 			throw new OperationNotAllowedException(
 				"You have already applied for this exam."
+			);
+		}
+
+		if (!exam.hasMoreThanThreeDays()) {
+			throw new OperationNotAllowedException(
+				"You cannot enrol because there are less than 3 days until the exam starts."
 			);
 		}
 
