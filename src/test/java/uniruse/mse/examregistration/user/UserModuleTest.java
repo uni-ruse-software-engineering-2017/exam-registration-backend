@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import uniruse.mse.examregistration.BaseTest;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
+import uniruse.mse.examregistration.user.model.PatchProfessorModel;
 import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.SignUpUser;
 import uniruse.mse.examregistration.user.model.UserRole;
@@ -49,6 +50,26 @@ public class UserModuleTest extends BaseTest {
 			.matches(testProf.getPassword(), createdProf.getPassword()));
 		assertEquals(UserRole.PROFESSOR, createdProf.getRole());
 		assertFalse(createdProf.isActive());
+	}
+
+	@Test
+	public void should_UpdateProfessorAccount() throws Exception {
+		final Pair<ApplicationUser, String> admin = this.loginAsAdmin();
+		final String jwt = admin.getSecond();
+
+		final Professor testProf = this.getTestProfessor();
+		this.post("/professors", this.toJson(testProf), jwt)
+			.andExpect(MockMvcResultMatchers.status()
+			.isCreated());
+
+		final PatchProfessorModel newProfessorData = new PatchProfessorModel();
+		newProfessorData.setCabinet("666");
+		newProfessorData.setFullName("prof. Jane Doe");
+		newProfessorData.setPhoneNumber("+359878781234");
+
+		this.patch("/professors/2", this.toJson(newProfessorData), jwt)
+			.andExpect(MockMvcResultMatchers.status()
+			.isOk());
 	}
 
 	@Test
@@ -249,16 +270,6 @@ public class UserModuleTest extends BaseTest {
 		this.get("/activate/" + createdUser.getUsername() + "?token="
 				+ activationToken, null)
 			.andExpect(status().isUnprocessableEntity());
-	}
-
-	private ApplicationUser getTestUser() {
-		final ApplicationUser user = new ApplicationUser();
-		user.setUsername("s136510@stud.uni-ruse.bg");
-		user.setFullName("Tsvetan Ganev");
-		user.setPassword("12345678");
-		user.setRole(UserRole.STUDENT);
-		user.setActive(false);
-		return user;
 	}
 
 	private Professor getTestProfessor() {

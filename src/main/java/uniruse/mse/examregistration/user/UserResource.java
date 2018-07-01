@@ -1,6 +1,7 @@
 package uniruse.mse.examregistration.user;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import uniruse.mse.examregistration.user.model.ApplicationUser;
+import uniruse.mse.examregistration.user.model.PatchProfessorModel;
 import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.Student;
 
@@ -40,10 +43,29 @@ public class UserResource {
 	@ResponseBody
 	@ResponseStatus(code = HttpStatus.CREATED)
 	@PreAuthorize("hasRole('ADMIN')")
-	public Professor create(@RequestBody Professor professor) {
+	public Professor createProfessor(@RequestBody Professor professor) {
 		final Professor createdProfessor = userService.createProfessor(professor);
 		createdProfessor.setPassword(null);
 		return createdProfessor;
+	}
+
+	/**
+	 * PATCH /professors/:id
+	 *
+	 * Administration end point for updating professor information.
+	 *
+	 * Required role: ADMIN
+	 *
+	 * @param professor
+	 * @return 200 (OK) - The updated entity
+	 */
+	@RequestMapping(method = PATCH, path = "/professors/{professorId}")
+	@ResponseBody
+	@PreAuthorize("hasRole('ADMIN')")
+	public Professor updateProfessor(@PathVariable Long professorId, @RequestBody PatchProfessorModel professor) {
+		final Professor updatedProfessor = userService.updateProfessor(professorId, professor);
+		updatedProfessor.setPassword(null);
+		return updatedProfessor;
 	}
 
 	/**

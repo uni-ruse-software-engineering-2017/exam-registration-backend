@@ -22,6 +22,7 @@ import uniruse.mse.examregistration.exception.UserAlreadyActivatedException;
 import uniruse.mse.examregistration.rusystem.RuStudentData;
 import uniruse.mse.examregistration.rusystem.RuStudentSystem;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
+import uniruse.mse.examregistration.user.model.PatchProfessorModel;
 import uniruse.mse.examregistration.user.model.Professor;
 import uniruse.mse.examregistration.user.model.SignUpUser;
 import uniruse.mse.examregistration.user.model.Student;
@@ -44,7 +45,7 @@ public class UserService {
 
 	@Autowired
 	private RuStudentSystem studentSystem;
-	
+
 	@Transactional
 	public ApplicationUser create(ApplicationUser user) {
 		final Optional<ApplicationUser> existingUser = this
@@ -107,6 +108,44 @@ public class UserService {
 		return userRepository.save(professor);
 	}
 
+
+	/**
+	 * Updates existing professor's information.
+	 *
+	 * @param professorId - the ID of the professor that will be updated
+	 * @param profModel - the new information that will be saved
+	 * @return updated professor instance
+	 */
+	public Professor updateProfessor(Long professorId, PatchProfessorModel profModel) {
+		final Optional<ApplicationUser> professor = this.userRepository.findById(professorId);
+
+		if (!professor.isPresent()) {
+			throw new ObjectNotFoundException("Professor with ID '"
+					+ professorId + "' was not found.");
+		}
+
+		final Professor existingProfessor = (Professor) professor.get();
+
+		// nothing to update
+		if (profModel == null) {
+			return existingProfessor;
+		}
+
+		if (profModel.getCabinet() != null && !profModel.getCabinet().isEmpty()) {
+			existingProfessor.setCabinet(profModel.getCabinet());
+		}
+
+		if (profModel.getFullName() != null && !profModel.getFullName().isEmpty()) {
+			existingProfessor.setFullName(profModel.getFullName());
+		}
+
+		if (profModel.getPhoneNumber() != null && !profModel.getPhoneNumber().isEmpty()) {
+			existingProfessor.setPhoneNumber(profModel.getPhoneNumber());
+		}
+
+		return this.userRepository.save(existingProfessor);
+	}
+
 	@Transactional
 	public void signUp(SignUpUser user) {
 		final ApplicationUser existingUser = this.getByUsername(user.getUsername()).orElse(null);
@@ -134,7 +173,7 @@ public class UserService {
 			// extract faculty number from email address
 			student.setFacultyNumber(fn);
 
-			RuStudentData studentData = studentSystem.findByFacultyNumber(fn);
+			final RuStudentData studentData = studentSystem.findByFacultyNumber(fn);
 			student.setFullName(studentData.getFullName());
 			student.setStudyForm(getStudyForm(studentData.getStudyForm()));
 			student.setSpecialty(studentData.getSpecialty());
@@ -256,7 +295,7 @@ public class UserService {
 	private boolean isProfessor(String emailAddress) {
 		return PROFESSOR_EMAIL_REGEX.matcher(emailAddress).matches();
 	}
-	
+
 	private StudyForm getStudyForm(int n) {
 		if (n == 1) {
 			return StudyForm.FULL_TIME;
