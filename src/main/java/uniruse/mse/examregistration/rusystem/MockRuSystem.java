@@ -22,7 +22,7 @@ public class MockRuSystem implements RuStudentSystem {
 	    try {
 	    	final File inputF = new ClassPathResource("students.csv").getFile();
 	    	final InputStream inputFS = new FileInputStream(inputF);
-	    	final BufferedReader br = new BufferedReader(new InputStreamReader(inputFS));
+	    	final BufferedReader br = new BufferedReader(new InputStreamReader(inputFS, "UTF-8"));
 	    	// skip the header of the csv
 	    	students = br.lines().skip(1).map(mapToItem).collect(Collectors.toList());
 	    	br.close();
