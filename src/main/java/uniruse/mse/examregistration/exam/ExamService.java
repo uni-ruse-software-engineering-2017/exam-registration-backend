@@ -167,7 +167,6 @@ public class ExamService {
 	}
 
 	public Exam enrol(Student student, Long examId) {
-		// TODO: check exam date
 		final Exam exam = this.getById(examId);
 
 		if (exam == null) {
