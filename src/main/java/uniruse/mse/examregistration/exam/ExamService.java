@@ -215,7 +215,7 @@ public class ExamService {
 			);
 		}
 
-		if (!exam.hasMoreThanThreeDays()) {
+		if (!exam.canStudentsUnenrol()) {
 			throw new OperationNotAllowedException(
 				"You cannot unenrol because there are less than 3 days remaining until the exam starts."
 			);

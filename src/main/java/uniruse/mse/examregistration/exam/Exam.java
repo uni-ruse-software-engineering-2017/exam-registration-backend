@@ -188,9 +188,14 @@ public class Exam {
 				.filter(e -> e.getStatus() == ExamEnrolmentStatus.APPROVED).count();
 	}
 
-	@JsonProperty("canStudentsApply")
-	public boolean canStudentsApply() {
+	@JsonProperty("canStudentsEnrol")
+	public boolean canStudentsEnrol() {
 		return this.getApprovedCount() < this.getMaxSeats() && this.hasMoreThanThreeDays();
+	}
+
+	@JsonProperty("canStudentsUnenrol")
+	public boolean canStudentsUnenrol() {
+		return !this.hasMoreThanThreeDays();
 	}
 
 	public boolean hasMoreThanThreeDays() {
