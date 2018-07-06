@@ -19,6 +19,9 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import uniruse.mse.examregistration.exam.ExamEnrolment.ExamEnrolmentStatus;
 import uniruse.mse.examregistration.exception.OperationNotAllowedException;
 import uniruse.mse.examregistration.subject.Subject;
 import uniruse.mse.examregistration.user.model.ApplicationUser;
@@ -178,11 +181,22 @@ public class Exam {
 		return this.getEnrolledStudents().size() > 0;
 	}
 
+	@JsonProperty("approvedCount")
+	public long getApprovedCount() {
+		return this.getEnrolledStudents()
+				.stream()
+				.filter(e -> e.getStatus() == ExamEnrolmentStatus.APPROVED).count();
+	}
+
+	@JsonProperty("canStudentsApply")
+	public boolean canStudentsApply() {
+		return this.getApprovedCount() < this.getMaxSeats() && this.hasMoreThanThreeDays();
+	}
+
 	public boolean hasMoreThanThreeDays() {
 		final LocalDateTime examStartTime = DateConverter.toLocalDateTime(getStartTime());
 		final LocalDateTime threeDaysFromNow = LocalDateTime.now().plusDays(3);
 
 		return examStartTime.isAfter(threeDaysFromNow);
-		
 	}
 }

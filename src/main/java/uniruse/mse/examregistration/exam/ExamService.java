@@ -188,6 +188,14 @@ public class ExamService {
 			);
 		}
 
+		if (exam.getApprovedCount() >= exam.getMaxSeats()) {
+			throw new OperationNotAllowedException(
+				"You cannot enrol because the maximum students capacity for this exam ("
+				+ exam.getMaxSeats() +
+				") is already reached."
+			);
+		}
+
 		final ExamEnrolment enrolment = new ExamEnrolment();
 		enrolment.setExam(exam);
 		enrolment.setStatus(ExamEnrolmentStatus.PENDING);
@@ -199,12 +207,17 @@ public class ExamService {
 	}
 
 	public Exam unenrol(Student student, Long examId) {
-		// TODO: check exam date
 		final Exam exam = this.getById(examId);
 
 		if (exam == null) {
 			throw new ObjectNotFoundException(
 				"Exam with ID " + examId + " was not found."
+			);
+		}
+
+		if (!exam.hasMoreThanThreeDays()) {
+			throw new OperationNotAllowedException(
+				"You cannot unenrol because there are less than 3 days remaining until the exam starts."
 			);
 		}
 
