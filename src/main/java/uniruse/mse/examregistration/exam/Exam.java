@@ -195,7 +195,7 @@ public class Exam {
 
 	@JsonProperty("canStudentsUnenrol")
 	public boolean canStudentsUnenrol() {
-		return !this.hasMoreThanThreeDays();
+		return this.hasMoreThanThreeDays();
 	}
 
 	public boolean hasMoreThanThreeDays() {
